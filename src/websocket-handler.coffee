@@ -13,9 +13,13 @@ class WebsocketHandler
 
   # API endpoints
   identity: (data) =>
-    request = {metadata: {responseId: 'hi'}}
+    request =
+      metadata:
+        auth: data
+        jobType: 'Authenticate'
 
     @jobManager.do 'request', 'response', request, (error, response) =>
+      console.error error if error?
       return @sendFrame 'error', status: 502, message: 'Bad Gateway' if error?
       return @sendFrame 'error', status: 504, message: 'Gateway Timeout' unless response?
       {code,status} = response.metadata

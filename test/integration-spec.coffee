@@ -9,7 +9,7 @@ Server           = require '../src/server'
 
 describe 'Websocket', ->
   beforeEach ->
-    @redisId = uuid.v1()
+    @redisId = uuid.v4()
 
     @sut = new Server
       port: 0xd00d
@@ -32,6 +32,23 @@ describe 'Websocket', ->
 
       @onConnect = sinon.spy()
       @meshblu.connect @onConnect
+
+    it 'should create a request in the request queue', (done) ->
+      jobManager = new JobManager
+        client: new RedisNS 'ns', redis.createClient(@redisId)
+        timeoutSeconds: 1
+
+      jobManager.getRequest ['request'], (error, request) =>
+        return done error if error?
+        expect(request.metadata.responseId).to.exist
+        delete request.metadata.responseId # We don't know what its gonna be
+
+        expect(request).to.deep.equal
+          metadata:
+            auth: {uuid: 'laughter', token: 'ha-ha-ha-ha-ha-ha-halp'}
+            jobType: 'Authenticate'
+          rawData: 'null'
+        done()
 
     describe 'when the response is all good', ->
       beforeEach (done) ->
