@@ -8,17 +8,18 @@ JobManager       = require 'meshblu-core-job-manager'
 Server           = require '../src/server'
 
 describe 'Websocket', ->
-  beforeEach ->
+  beforeEach (done) ->
     @redisId = uuid.v4()
 
     @sut = new Server
       port: 0xd00d
       timeoutSeconds: 1
       client: new RedisNS 'ns', redis.createClient(@redisId)
-    @sut.run()
+      
+    @sut.run done
 
-  afterEach ->
-    @sut.stop()
+  afterEach (done) ->
+    @sut.stop done
 
   describe 'when a websocket connects with a uuid and token', ->
     beforeEach ->
@@ -32,6 +33,10 @@ describe 'Websocket', ->
 
       @onConnect = sinon.spy()
       @meshblu.connect @onConnect
+      @meshblu.on 'error', => # ignore connect error, it'll be a GATEWAY_TIMEOUT
+
+    afterEach ->
+      @meshblu.close()
 
     it 'should create a request in the request queue', (done) ->
       jobManager = new JobManager

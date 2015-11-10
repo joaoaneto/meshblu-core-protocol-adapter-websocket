@@ -10,11 +10,12 @@ class Server
       client: client
       timeoutSeconds: timeoutSeconds ? 30
 
-  run: =>
+  run: (callback=->) =>
     @server.on 'upgrade', @onUpgrade
-    @server.listen @port
+    @server.listen @port, callback
 
-  stop: => @server.close()
+  stop: (callback=->) =>
+    @server.close callback
 
   # Event Listeners
   onUpgrade: (request, socket, body) =>
