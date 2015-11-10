@@ -1,10 +1,11 @@
 {
   "name": "meshblu-server-websocket",
-  "version": "1.0.0",
+  "version": "Add",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"
+    "start": "node command.js",
+    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul"
   },
   "repository": {
     "type": "git",
@@ -35,7 +36,8 @@
     "@octoblu/redis-ns": "^0.1.1",
     "faye-websocket": "^0.10.0",
     "lodash": "^3.10.1",
-    "meshblu-core-job-manager": "^3.1.0",
+    "meshblu-config": "^3.1.1",
+    "meshblu-core-job-manager": "^3.1.1",
     "meshblu-websocket": "^2.3.0",
     "redis": "^2.3.0"
   }

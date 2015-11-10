@@ -5,6 +5,7 @@ class WebsocketHandler
   constructor: ({@jobManager,@meshbluConfig,@websocket}) ->
     @EVENTS =
       'identity': @identity
+      'subscriptionlist': @subscriptionList
 
   initialize: =>
     @websocket.on 'message', @onMessage
@@ -37,6 +38,14 @@ class WebsocketHandler
         return @sendFrame 'notReady', status: 502, message: 'Bad Gateway' if error?
         @sendFrame 'ready', message: status, status: code
 
+  subscriptionList: =>
+    request = metadata: {jobType: 'SubscriptionList'}
+    @jobManager.do 'request', 'response', request, (error, jobResponse) =>
+      return @sendFrame 'error', status: 502, message: 'Bad Gateway', frame: ['subscriptionlist'] if error?
+      {metadata,rawData} = jobResponse
+      return @sendFrame 'error', status: metadata.code, message: metadata.status if metadata.code != 200
+      @sendFrame 'subscriptionlist', JSON.parse(rawData)
+
   # Helpers
   connectUpstream: (authData, callback) =>
     options = _.extend {}, authData, @meshbluConfig
@@ -53,6 +62,10 @@ class WebsocketHandler
     @upstream.on 'unregistered', (device) => @sendFrame 'unregistered', device
     @upstream.on 'subscribe', => @sendFrame 'subscribe'
     @upstream.on 'unsubscribe', => @sendFrame 'unsubscribe'
+    @upstream.on 'error', (error) =>
+      delete @upstream
+      @sendFrame 'error', message: error.message
+      @websocket.close()
 
 
   parseFrame: (frame, callback) =>

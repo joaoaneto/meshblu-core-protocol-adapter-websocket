@@ -46,7 +46,6 @@ describe 'Websocket', ->
 
       @onConnect = sinon.spy()
       @meshblu.connect @onConnect
-      @meshblu.on 'error', => # ignore connect error, it'll be a GATEWAY_TIMEOUT
 
     afterEach ->
       @meshblu.close()
@@ -168,6 +167,45 @@ describe 'Websocket', ->
 
           it 'should have the correct uuid', ->
             expect(_.first(@devices).uuid).to.equal 'egged'
+
+        describe 'subscriptionList', ->
+          beforeEach ->
+            @meshblu.send 'subscriptionlist'
+
+          it 'should create a request', (done) ->
+            jobManager = new JobManager
+              client: new RedisNS 'ns', redis.createClient(@redisId)
+              timeoutSeconds: 1
+
+            jobManager.getRequest ['request'], (error,request) =>
+              return done error if error?
+              return done new Error('Request timeout') unless request?
+              expect(request.metadata.jobType).to.deep.equal 'SubscriptionList'
+              done()
+
+          describe 'when the dispatcher responds', ->
+            beforeEach (done) ->
+              @meshblu.once 'subscriptionlist', (@response) => done()
+
+              jobManager = new JobManager
+                client: new RedisNS 'ns', redis.createClient(@redisId)
+                timeoutSeconds: 1
+
+              jobManager.getRequest ['request'], (error,request) =>
+                return done error if error?
+                return done new Error('Request timeout') unless request?
+
+                response =
+                  metadata:
+                    responseId: request.metadata.responseId
+                    code: 200
+                  data:
+                    zapped: 'OHM MY!! WATT HAPPENED?? VOLTS'
+                jobManager.createResponse 'response', response, (error) =>
+                  return done error if error?
+
+            it 'should yield the response', ->
+              expect(@response).to.deep.equal zapped: 'OHM MY!! WATT HAPPENED?? VOLTS'
 
       describe 'when the upstream server emits notReady', ->
         beforeEach (done) ->
