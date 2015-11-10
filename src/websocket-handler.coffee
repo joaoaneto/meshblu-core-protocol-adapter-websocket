@@ -1,21 +1,26 @@
 _          = require 'lodash'
+MeshbluWebsocket = require 'meshblu-websocket'
 
 class WebsocketHandler
-  constructor: ({@websocket,@jobManager}) ->
+  constructor: ({@jobManager,@meshbluConfig,@websocket}) ->
 
   initialize: =>
     @websocket.on 'message', @onMessage
+    @websocket.on 'close', @onClose
 
   # Event Listeners
+  onClose: =>
+    @upstream?.close()
+
   onMessage: (event) =>
     @parseFrame event.data, (error, type, data) =>
       return @identity data if type == 'identity'
 
   # API endpoints
-  identity: (data) =>
+  identity: (authData) =>
     request =
       metadata:
-        auth: data
+        auth: authData
         jobType: 'Authenticate'
 
     @jobManager.do 'request', 'response', request, (error, response) =>
@@ -23,12 +28,19 @@ class WebsocketHandler
       return @sendFrame 'error', status: 504, message: 'Gateway Timeout' unless response?
       {code,status} = response.metadata
 
-      type = 'notReady'
-      type = 'ready' if code == 204
+      return @sendFrame 'notReady', message: status, status: code unless code == 204
 
-      @sendFrame type, message: status, status: code
+      @connectUpstream authData, (error) =>
+        return @sendFrame 'notReady', status: 502, message: 'Bad Gateway' if error?
+        @sendFrame 'ready', message: status, status: code
 
   # Helpers
+  connectUpstream: (authData, callback) =>
+    options = _.extend {}, authData, @meshbluConfig
+
+    @upstream = new MeshbluWebsocket options
+    @upstream.connect callback
+
   parseFrame: (frame, callback) =>
     try frame = JSON.parse frame
     return callback null, frame... if _.isArray(frame) && frame.length

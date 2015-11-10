@@ -4,7 +4,7 @@ JobManager       = require 'meshblu-core-job-manager'
 WebsocketHandler = require './websocket-handler'
 
 class Server
-  constructor: ({@port,client,timeoutSeconds}={}) ->
+  constructor: ({@port,@meshbluConfig,client,timeoutSeconds}={}) ->
     @server = http.createServer()
     @jobManager = new JobManager
       client: client
@@ -25,7 +25,10 @@ class Server
     return unless WebSocket.isWebSocket request
     websocket = new WebSocket request, socket, body
 
-    websocketHandler = new WebsocketHandler websocket: websocket, jobManager: @jobManager
+    websocketHandler = new WebsocketHandler
+      websocket: websocket
+      jobManager: @jobManager
+      meshbluConfig: @meshbluConfig
     websocketHandler.initialize()
 
 module.exports = Server
