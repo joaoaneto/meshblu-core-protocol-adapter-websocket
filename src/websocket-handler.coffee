@@ -3,6 +3,8 @@ MeshbluWebsocket = require 'meshblu-websocket'
 
 class WebsocketHandler
   constructor: ({@jobManager,@meshbluConfig,@websocket}) ->
+    @EVENTS =
+      'identity': @identity
 
   initialize: =>
     @websocket.on 'message', @onMessage
@@ -14,7 +16,8 @@ class WebsocketHandler
 
   onMessage: (event) =>
     @parseFrame event.data, (error, type, data) =>
-      return @identity data if type == 'identity'
+      return @EVENTS[type] data if @EVENTS[type]?
+      @upstream.send type, data if @upstream?
 
   # API endpoints
   identity: (authData) =>
@@ -40,6 +43,17 @@ class WebsocketHandler
 
     @upstream = new MeshbluWebsocket options
     @upstream.connect callback
+    @upstream.on 'whoami', (device) => @sendFrame 'whoami', device
+    @upstream.on 'device', (device) => @sendFrame 'device', device
+    @upstream.on 'devices', (devices) => @sendFrame 'devices', devices
+    @upstream.on 'message', (message) => @sendFrame 'message', message
+    @upstream.on 'mydevices', (devices) => @sendFrame 'mydevices', devices
+    @upstream.on 'registered', (device) => @sendFrame 'registered', device
+    @upstream.on 'updated', (device) => @sendFrame 'updated', device
+    @upstream.on 'unregistered', (device) => @sendFrame 'unregistered', device
+    @upstream.on 'subscribe', => @sendFrame 'subscribe'
+    @upstream.on 'unsubscribe', => @sendFrame 'unsubscribe'
+
 
   parseFrame: (frame, callback) =>
     try frame = JSON.parse frame

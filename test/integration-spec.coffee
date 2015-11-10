@@ -110,6 +110,65 @@ describe 'Websocket', ->
             expect(error).not.to.exist
             done()
 
+        describe 'when whoami fallbacks to upstream', ->
+          beforeEach (done) ->
+            @upstreamMeshblu.websocket.on 'message', (event) =>
+              @upstreamMeshblu.send 'whoami', uuid: 'laughter'
+
+            @meshblu.whoami()
+            @meshblu.once 'whoami', (@device) => done()
+
+          it 'should have the correct uuid', ->
+            expect(@device.uuid).to.equal 'laughter'
+
+        describe 'when device fallbacks to upstream', ->
+          beforeEach (done) ->
+            @upstreamMeshblu.websocket.on 'message', (event) =>
+              [type, data] = JSON.parse event.data
+              @upstreamMeshblu.send type, data
+
+            @meshblu.device uuid: 'shopping-frenzy'
+            @meshblu.once 'device', (@device) => done()
+
+          it 'should have the correct uuid', ->
+            expect(@device.uuid).to.equal 'shopping-frenzy'
+
+        describe 'when devices fallbacks to upstream', ->
+          beforeEach (done) ->
+            @upstreamMeshblu.websocket.on 'message', (event) =>
+              [type, data] = JSON.parse event.data
+              @upstreamMeshblu.send type, [{uuid: 'museum-exhibit'}]
+
+            @meshblu.devices uuid: 'shopping-frenzy'
+            @meshblu.once 'devices', (@devices) => done()
+
+          it 'should have the correct uuid', ->
+            expect(_.first(@devices).uuid).to.equal 'museum-exhibit'
+
+        describe 'when messages fallbacks to upstream', ->
+          beforeEach (done) ->
+            @upstreamMeshblu.websocket.on 'message', (event) =>
+              [type, data] = JSON.parse event.data
+              @upstreamMeshblu.send type, data
+
+            @meshblu.message topic: 'rock-lobster'
+            @meshblu.once 'message', (@message) => done()
+
+          it 'should have the correct uuid', ->
+            expect(@message.topic).to.equal 'rock-lobster'
+
+        describe 'when mydevices fallbacks to upstream', ->
+          beforeEach (done) ->
+            @upstreamMeshblu.websocket.on 'message', (event) =>
+              [type, data] = JSON.parse event.data
+              @upstreamMeshblu.send type, [{uuid: 'egged'}]
+
+            @meshblu.mydevices()
+            @meshblu.once 'mydevices', (@devices) => done()
+
+          it 'should have the correct uuid', ->
+            expect(_.first(@devices).uuid).to.equal 'egged'
+
       describe 'when the upstream server emits notReady', ->
         beforeEach (done) ->
           meshbluConnected = => @upstreamMeshblu.connected
