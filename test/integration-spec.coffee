@@ -68,7 +68,7 @@ describe 'Websocket', ->
           rawData: 'null'
         done()
 
-    describe.only 'when the response is all good', ->
+    describe 'when the response is all good', ->
       beforeEach (done) ->
         jobManager = new JobManager
           client: new RedisNS 'ns', redis.createClient(@redisId)
