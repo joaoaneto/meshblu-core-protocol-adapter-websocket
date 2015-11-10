@@ -15,7 +15,7 @@ describe 'Websocket', ->
       port: 0xd00d
       timeoutSeconds: 1
       client: new RedisNS 'ns', redis.createClient(@redisId)
-      
+
     @sut.run done
 
   afterEach (done) ->

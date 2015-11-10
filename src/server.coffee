@@ -10,6 +10,9 @@ class Server
       client: client
       timeoutSeconds: timeoutSeconds ? 30
 
+  address: =>
+    @server.address()
+
   run: (callback=->) =>
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
