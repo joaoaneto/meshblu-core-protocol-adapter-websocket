@@ -19,6 +19,11 @@ class Command
       {address,port} = @server.address()
       console.log "listening on #{address}:#{port}"
 
+    process.on 'SIGTERM', =>
+      console.log 'SIGTERM received, shutting down'
+      @server.stop =>
+        process.exit 0
+
   panic: (error) =>
     console.error error.stack
     process.exit 1
