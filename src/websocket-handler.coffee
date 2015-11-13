@@ -51,7 +51,6 @@ class WebsocketHandler
     options = _.extend {}, authData, @meshbluConfig
 
     @upstream = new MeshbluWebsocket options
-    @upstream.connect callback
     @upstream.on 'whoami', (device) => @sendFrame 'whoami', device
     @upstream.on 'device', (device) => @sendFrame 'device', device
     @upstream.on 'devices', (devices) => @sendFrame 'devices', devices
@@ -64,9 +63,9 @@ class WebsocketHandler
     @upstream.on 'unsubscribe', => @sendFrame 'unsubscribe'
     @upstream.on 'error', (error) =>
       delete @upstream
-      @sendFrame 'error', message: error.message
+      @sendFrame 'error', message: error.message, code: 502
       @websocket.close()
-
+    @upstream.connect callback
 
   parseFrame: (frame, callback) =>
     try frame = JSON.parse frame
