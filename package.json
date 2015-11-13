@@ -1,6 +1,6 @@
 {
   "name": "meshblu-server-websocket",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
   "scripts": {
@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@octoblu/redis-ns": "^0.1.1",
+    "debug": "^2.2.0",
     "faye-websocket": "^0.10.0",
     "lodash": "^3.10.1",
     "meshblu-config": "^3.1.1",
