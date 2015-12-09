@@ -5,32 +5,26 @@ WebsocketHandler = require './websocket-handler'
 debug = require('debug')('meshblu-server-websocket:server')
 
 class Server
-  constructor: ({@port,@meshbluConfig,client,timeoutSeconds}={}) ->
+  constructor: ({@port,@meshbluConfig,@pool,@timeoutSeconds}={}) ->
     @server = http.createServer()
-    @jobManager = new JobManager
-      client: client
-      timeoutSeconds: timeoutSeconds ? 30
 
   address: =>
     @server.address()
 
-  run: (callback=->) =>
+  start: (callback) =>
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
 
-  stop: (callback=->) =>
+  stop: (callback) =>
     @server.close callback
 
   # Event Listeners
   onUpgrade: (request, socket, body) =>
-    debug 'onUpgrade'
     return unless WebSocket.isWebSocket request
+    debug 'onUpgrade'
     websocket = new WebSocket request, socket, body
 
-    websocketHandler = new WebsocketHandler
-      websocket: websocket
-      jobManager: @jobManager
-      meshbluConfig: @meshbluConfig
+    websocketHandler = new WebsocketHandler {websocket, @pool, @meshbluConfig, @timeoutSeconds}
     websocketHandler.initialize()
 
 module.exports = Server

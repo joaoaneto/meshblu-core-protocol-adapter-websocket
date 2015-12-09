@@ -8,25 +8,34 @@ _                = require 'lodash'
 RedisNS          = require '@octoblu/redis-ns'
 JobManager       = require 'meshblu-core-job-manager'
 Server           = require '../src/server'
+{Pool}           = require 'generic-pool'
 
 describe 'Websocket', ->
   beforeEach (done) ->
     @upstreamMeshblu = new MeshbluServer port: 0xf00d
-    @upstreamMeshblu.run done
+    @upstreamMeshblu.start done
 
   beforeEach (done) ->
     @redisId = uuid.v4()
 
+    pool = new Pool
+      max: 1
+      min: 0
+      create: (callback) =>
+        client = new RedisNS 'ns', redis.createClient(@redisId)
+        callback null, client
+      destroy: (client) => client.end true
+
     @sut = new Server
       port: 0xd00d
       timeoutSeconds: 1
-      client: new RedisNS 'ns', redis.createClient(@redisId)
+      pool: pool
       meshbluConfig:
         hostname: "localhost"
         port: 0xf00d
         protocol: 'http'
 
-    @sut.run done
+    @sut.start done
 
   afterEach (done) ->
     @upstreamMeshblu.stop done
@@ -108,17 +117,6 @@ describe 'Websocket', ->
             [error] = @onConnect.firstCall.args
             expect(error).not.to.exist
             done()
-
-        describe 'when whoami fallbacks to upstream', ->
-          beforeEach (done) ->
-            @upstreamMeshblu.websocket.on 'message', (event) =>
-              @upstreamMeshblu.send 'whoami', uuid: 'laughter'
-
-            @meshblu.whoami()
-            @meshblu.once 'whoami', (@device) => done()
-
-          it 'should have the correct uuid', ->
-            expect(@device.uuid).to.equal 'laughter'
 
         describe 'when device fallbacks to upstream', ->
           beforeEach (done) ->
@@ -254,7 +252,7 @@ class MeshbluServer
     @connected = false
     @server = http.createServer()
 
-  run: (callback) =>
+  start: (callback) =>
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
 
