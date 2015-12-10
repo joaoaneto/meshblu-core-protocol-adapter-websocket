@@ -18,18 +18,18 @@ describe 'Websocket', ->
   beforeEach (done) ->
     @redisId = uuid.v4()
 
-    pool = new Pool
+    @pool = new Pool
       max: 1
       min: 0
       create: (callback) =>
-        client = new RedisNS 'ns', redis.createClient(@redisId)
+        client = _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
         callback null, client
       destroy: (client) => client.end true
 
     @sut = new Server
       port: 0xd00d
       timeoutSeconds: 1
-      pool: pool
+      pool: @pool
       meshbluConfig:
         hostname: "localhost"
         port: 0xf00d
@@ -61,7 +61,7 @@ describe 'Websocket', ->
 
     it 'should create a request in the request queue', (done) ->
       jobManager = new JobManager
-        client: new RedisNS 'ns', redis.createClient(@redisId)
+        client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
         timeoutSeconds: 1
 
       jobManager.getRequest ['request'], (error, request) =>
@@ -79,7 +79,7 @@ describe 'Websocket', ->
     describe 'when the response is all good', ->
       beforeEach (done) ->
         jobManager = new JobManager
-          client: new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
           timeoutSeconds: 1
 
         jobManager.getRequest ['request'], (error, request) =>
@@ -142,18 +142,6 @@ describe 'Websocket', ->
           it 'should have the correct uuid', ->
             expect(_.first(@devices).uuid).to.equal 'museum-exhibit'
 
-        describe 'when messages fallbacks to upstream', ->
-          beforeEach (done) ->
-            @upstreamMeshblu.websocket.on 'message', (event) =>
-              [type, data] = JSON.parse event.data
-              @upstreamMeshblu.send type, data
-
-            @meshblu.message topic: 'rock-lobster'
-            @meshblu.once 'message', (@message) => done()
-
-          it 'should have the correct uuid', ->
-            expect(@message.topic).to.equal 'rock-lobster'
-
         describe 'when mydevices fallbacks to upstream', ->
           beforeEach (done) ->
             @upstreamMeshblu.websocket.on 'message', (event) =>
@@ -172,7 +160,7 @@ describe 'Websocket', ->
 
           it 'should create a request', (done) ->
             jobManager = new JobManager
-              client: new RedisNS 'ns', redis.createClient(@redisId)
+              client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
               timeoutSeconds: 1
 
             jobManager.getRequest ['request'], (error,request) =>
@@ -186,7 +174,7 @@ describe 'Websocket', ->
               @meshblu.once 'subscriptionlist', (@response) => done()
 
               jobManager = new JobManager
-                client: new RedisNS 'ns', redis.createClient(@redisId)
+                client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
                 timeoutSeconds: 1
 
               jobManager.getRequest ['request'], (error,request) =>
@@ -225,7 +213,7 @@ describe 'Websocket', ->
     describe 'when the response is all bad', ->
       beforeEach (done) ->
         jobManager = new JobManager
-          client: new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
           timeoutSeconds: 1
 
         jobManager.getRequest ['request'], (error, request) =>

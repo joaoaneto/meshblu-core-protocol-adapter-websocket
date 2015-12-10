@@ -3,6 +3,7 @@ debug = require('debug')('meshblu-server-websocket:websocket-handler')
 PooledJobManager = require './pooled-job-manager'
 MeshbluWebsocket = require 'meshblu-websocket'
 WhoamiHandler = require './handlers/whoami-handler'
+SendMessageHandler = require './handlers/send-message-handler'
 
 class WebsocketHandler
   constructor: ({@pool,@timeoutSeconds,@meshbluConfig,@websocket}) ->
@@ -11,6 +12,7 @@ class WebsocketHandler
       'identity': @identity
       'subscriptionlist': @subscriptionList
       'whoami': @handlerHandler WhoamiHandler
+      'message': @handlerHandler SendMessageHandler
 
   initialize: =>
     @websocket.on 'message', @onMessage

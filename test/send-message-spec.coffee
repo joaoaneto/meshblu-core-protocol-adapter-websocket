@@ -1,7 +1,7 @@
 _                = require 'lodash'
 Connect          = require './connect'
 
-describe 'sendFrame: whoami', ->
+describe 'sendFrame: message', ->
   beforeEach (done) ->
     @connect = new Connect
     @connect.connect (error, things) =>
@@ -13,19 +13,17 @@ describe 'sendFrame: whoami', ->
     @connect.shutItDown done
 
   beforeEach ->
-    @connection.send 'whoami'
+    @connection.send 'message'
 
   it 'should create a request', (done) ->
     @jobManager.getRequest ['request'], (error,request) =>
       return done error if error?
       return done new Error('Request timeout') unless request?
-      expect(request.metadata.jobType).to.deep.equal 'GetDevice'
+      expect(request.metadata.jobType).to.deep.equal 'SendMessage'
       done()
 
   describe 'when the dispatcher responds', ->
     beforeEach (done) ->
-      @connection.once 'whoami', (@response) => done()
-
       @jobManager.getRequest ['request'], (error,request) =>
         return done error if error?
         return done new Error('Request timeout') unless request?
@@ -36,8 +34,8 @@ describe 'sendFrame: whoami', ->
             code: 200
           data:
             uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
-        @jobManager.createResponse 'response', response, (error) =>
-          return done error if error?
+        @jobManager.createResponse 'response', response, (@error) =>
+          done @error
 
-    it 'should yield the response', ->
-      expect(@response).to.deep.equal uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
+    it 'should not have an error', ->
+      expect(@error).to.not.exist

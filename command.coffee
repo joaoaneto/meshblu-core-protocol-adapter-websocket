@@ -1,3 +1,4 @@
+_       = require 'lodash'
 redis   = require 'redis'
 RedisNS = require '@octoblu/redis-ns'
 Server  = require './src/server'
@@ -34,7 +35,7 @@ class Command
       max: redisMaxConnections
       min: 0
       create: (callback) =>
-        client = new RedisNS namespace, redis.createClient(redisUri)
+        client = _.bindAll new RedisNS namespace, redis.createClient(redisUri)
         callback null, client
       destroy: (client) =>
         client.end true

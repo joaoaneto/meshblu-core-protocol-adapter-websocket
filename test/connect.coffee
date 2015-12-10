@@ -13,7 +13,7 @@ class Connect
   constructor: ->
     @redisId = uuid.v1()
     @jobManager = new JobManager
-      client: new RedisNS 'ns', redis.createClient(@redisId)
+      client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
       timeoutSeconds: 1
 
   connect: (callback) =>
@@ -31,7 +31,7 @@ class Connect
         upstreamSocket: @upstreamSocket
         device: {uuid: 'masseuse', token: 'assassin'}
         jobManager: new JobManager
-          client: new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
           timeoutSeconds: 1
 
   shutItDown: (callback) =>
@@ -47,9 +47,9 @@ class Connect
       max: 1
       min: 0
       create: (callback) =>
-        client = new RedisNS 'ns', redis.createClient(@redisId)
+        client = _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
         callback null, client
-      destroy: (client) => client.end true
+      destroy: (client) => # don't end fakeredis # client.end true
 
     @sut = new Server
       port: 0xcafe
