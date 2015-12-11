@@ -13,7 +13,7 @@ class UpdateAsHandler
       data: request.data
 
     @jobManager.do @requestQueue, @responseQueue, updateDeviceRequest, (error, response) =>
-      return callback metadata: {code: 504, status: http.STATUS_CODES[504]} if error?
-      callback response
+      return callback error if error?
+      callback null, 'updateas', response
 
 module.exports = UpdateAsHandler

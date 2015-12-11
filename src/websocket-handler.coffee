@@ -2,6 +2,8 @@ _          = require 'lodash'
 debug = require('debug')('meshblu-server-websocket:websocket-handler')
 PooledJobManager = require './pooled-job-manager'
 MeshbluWebsocket = require 'meshblu-websocket'
+AuthenticateHandler = require './handlers/authenticate-handler'
+UpdateAsHandler = require './handlers/update-as-handler'
 WhoamiHandler = require './handlers/whoami-handler'
 SendMessageHandler = require './handlers/send-message-handler'
 
@@ -9,10 +11,12 @@ class WebsocketHandler
   constructor: ({@pool,@timeoutSeconds,@meshbluConfig,@websocket}) ->
     @jobManager = new PooledJobManager {@pool, @timeoutSeconds}
     @EVENTS =
-      'identity': @identity
-      'subscriptionlist': @subscriptionList
-      'whoami': @handlerHandler WhoamiHandler
-      'message': @handlerHandler SendMessageHandler
+      authenticate: @handlerHandler AuthenticateHandler
+      identity: @identity
+      message: @handlerHandler SendMessageHandler
+      subscriptionlist: @subscriptionList
+      updateas: @handlerHandler UpdateAsHandler
+      whoami: @handlerHandler WhoamiHandler
 
   initialize: =>
     @websocket.on 'message', @onMessage
