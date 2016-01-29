@@ -8,7 +8,7 @@ class Command
     namespace = process.env.NAMESPACE ? 'meshblu'
     redisUri  = process.env.REDIS_URI
     jobLogRedisUri  = process.env.JOB_LOG_REDIS_URI
-    jobLogQueue  = process.env.JOB_LOG_REDIS_QUEUE
+    jobLogQueue  = process.env.JOB_LOG_QUEUE
     connectionPoolMaxConnections = parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
     timeoutSeconds = parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
     meshbluConfig = new MeshbluConfig().toJSON()
@@ -19,12 +19,13 @@ class Command
       meshbluConfig
       jobTimeoutSeconds: timeoutSeconds
       jobLogRedisUri
+      jobLogQueue
       redisUri
       connectionPoolMaxConnections
     }
 
   run: =>
-    @server.start (error) =>
+    @server.run (error) =>
       return @panic error if error?
       {address,port} = @server.address()
       console.log "listening on #{address}:#{port}"
