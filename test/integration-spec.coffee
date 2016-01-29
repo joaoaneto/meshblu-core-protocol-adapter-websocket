@@ -1,6 +1,6 @@
 MeshbluWebsocket = require 'meshblu-websocket'
 WebSocket        = require 'faye-websocket'
-redis            = require 'fakeredis'
+redis            = require 'redis'
 uuid             = require 'uuid'
 async            = require 'async'
 http             = require 'http'
@@ -8,7 +8,6 @@ _                = require 'lodash'
 RedisNS          = require '@octoblu/redis-ns'
 JobManager       = require 'meshblu-core-job-manager'
 Server           = require '../src/server'
-{Pool}           = require 'generic-pool'
 
 describe 'Websocket', ->
   beforeEach (done) ->
@@ -16,26 +15,18 @@ describe 'Websocket', ->
     @upstreamMeshblu.start done
 
   beforeEach (done) ->
-    @redisId = uuid.v4()
-
-    @pool = new Pool
-      max: 1
-      min: 0
-      create: (callback) =>
-        client = _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
-        callback null, client
-      destroy: (client) => client.end true
-
     @sut = new Server
       port: 0xd00d
-      timeoutSeconds: 1
-      pool: @pool
+      jobTimeoutSeconds: 1
+      jobLogRedisUri: 'redis://localhost:6379'
+      redisUri: 'redis://localhost:6379'
+      namespace: 'ns'
       meshbluConfig:
         hostname: "localhost"
         port: 0xf00d
         protocol: 'http'
 
-    @sut.start done
+    @sut.run done
 
   afterEach (done) ->
     @upstreamMeshblu.stop done
@@ -61,7 +52,7 @@ describe 'Websocket', ->
 
     it 'should create a request in the request queue', (done) ->
       jobManager = new JobManager
-        client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+        client: _.bindAll new RedisNS 'ns', redis.createClient()
         timeoutSeconds: 1
 
       jobManager.getRequest ['request'], (error, request) =>
@@ -79,7 +70,7 @@ describe 'Websocket', ->
     describe 'when the response is all good', ->
       beforeEach (done) ->
         jobManager = new JobManager
-          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient()
           timeoutSeconds: 1
 
         jobManager.getRequest ['request'], (error, request) =>
@@ -160,7 +151,7 @@ describe 'Websocket', ->
 
           it 'should create a request', (done) ->
             jobManager = new JobManager
-              client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+              client: _.bindAll new RedisNS 'ns', redis.createClient()
               timeoutSeconds: 1
 
             jobManager.getRequest ['request'], (error,request) =>
@@ -174,7 +165,7 @@ describe 'Websocket', ->
               @meshblu.once 'subscriptionlist', (@response) => done()
 
               jobManager = new JobManager
-                client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+                client: _.bindAll new RedisNS 'ns', redis.createClient()
                 timeoutSeconds: 1
 
               jobManager.getRequest ['request'], (error,request) =>
@@ -213,7 +204,7 @@ describe 'Websocket', ->
     describe 'when the response is all bad', ->
       beforeEach (done) ->
         jobManager = new JobManager
-          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient()
           timeoutSeconds: 1
 
         jobManager.getRequest ['request'], (error, request) =>

@@ -1,8 +1,5 @@
 _       = require 'lodash'
-redis   = require 'redis'
-RedisNS = require '@octoblu/redis-ns'
 Server  = require './src/server'
-{Pool}        = require 'generic-pool'
 MeshbluConfig = require 'meshblu-config'
 
 class Command
@@ -10,14 +7,21 @@ class Command
     port = process.env.PORT ? 80
     namespace = process.env.NAMESPACE ? 'meshblu'
     redisUri  = process.env.REDIS_URI
-    redisMaxConnections = process.env.REDIS_MAX_CONNECTIONS ? 100
-    redisMaxConnections = parseInt redisMaxConnections
+    jobLogRedisUri  = process.env.JOB_LOG_REDIS_URI
+    jobLogQueue  = process.env.JOB_LOG_REDIS_QUEUE
+    connectionPoolMaxConnections = parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
+    timeoutSeconds = parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
     meshbluConfig = new MeshbluConfig().toJSON()
-    timeoutSeconds = process.env.JOB_TIMEOUT_SECONDS ? 30
-    timeoutSeconds = parseInt timeoutSeconds
-    pool = @buildPool {namespace, redisUri, redisMaxConnections}
 
-    @server = new Server {port, meshbluConfig, pool, timeoutSeconds}
+    @server = new Server {
+      port
+      namespace
+      meshbluConfig
+      jobTimeoutSeconds: timeoutSeconds
+      jobLogRedisUri
+      redisUri
+      connectionPoolMaxConnections
+    }
 
   run: =>
     @server.start (error) =>
@@ -29,16 +33,6 @@ class Command
       console.log 'SIGTERM received, shutting down'
       @server.stop =>
         process.exit 0
-
-  buildPool: ({namespace, redisUri, redisMaxConnections}) =>
-    pool = new Pool
-      max: redisMaxConnections
-      min: 0
-      create: (callback) =>
-        client = _.bindAll new RedisNS namespace, redis.createClient(redisUri)
-        callback null, client
-      destroy: (client) =>
-        client.end true
 
   panic: (error) =>
     console.error error.stack

@@ -13,7 +13,7 @@ describe 'sendFrame: message', ->
     @connect.shutItDown done
 
   beforeEach ->
-    @connection.send 'message'
+    @connection.send 'message', {}
 
   it 'should create a request', (done) ->
     @jobManager.getRequest ['request'], (error,request) =>

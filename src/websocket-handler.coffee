@@ -1,6 +1,5 @@
 _          = require 'lodash'
 debug = require('debug')('meshblu-server-websocket:websocket-handler')
-PooledJobManager = require './pooled-job-manager'
 MeshbluWebsocket = require 'meshblu-websocket'
 AuthenticateHandler = require './handlers/authenticate-handler'
 UpdateAsHandler = require './handlers/update-as-handler'
@@ -8,8 +7,7 @@ WhoamiHandler = require './handlers/whoami-handler'
 SendMessageHandler = require './handlers/send-message-handler'
 
 class WebsocketHandler
-  constructor: ({@pool,@timeoutSeconds,@meshbluConfig,@websocket}) ->
-    @jobManager = new PooledJobManager {@pool, @timeoutSeconds}
+  constructor: ({@websocket, @jobManager, @meshbluConfig}) ->
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
       identity: @identity
@@ -98,7 +96,7 @@ class WebsocketHandler
   sendFrame: (type, data) =>
     debug 'sendFrame', type, data
     frame = [type, data]
-    @websocket.send JSON.stringify frame
+    @websocket.send JSON.stringify(frame) unless type?
 
   sendError: (message, frame, code) =>
     @sendFrame 'error', message: message, frame: frame, status: code
