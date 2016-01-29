@@ -13,7 +13,7 @@ class AuthenticateHandler
           token: token
 
     @jobManager.do @requestQueue, @responseQueue, authenticateRequest, (error, response) =>
-      return callback error if error?
+      return callback error, 'authenticate' if error?
       callback null, 'authenticate', response
 
 module.exports = AuthenticateHandler

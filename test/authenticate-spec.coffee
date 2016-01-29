@@ -1,5 +1,5 @@
-_                = require 'lodash'
-Connect          = require './connect'
+_       = require 'lodash'
+Connect = require './connect'
 
 describe 'sendFrame: authenticate', ->
   beforeEach (done) ->

@@ -13,7 +13,7 @@ class IdentityAuthenticateHandler
           token: token
 
     @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
-      return callback error if error?
-      callback null, response
+      return callback error, 'identify' if error?
+      callback null, 'identity', response
 
 module.exports = IdentityAuthenticateHandler

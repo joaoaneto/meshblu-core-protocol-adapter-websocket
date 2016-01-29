@@ -13,7 +13,7 @@ class UpdateAsHandler
       data: request.data
 
     @jobManager.do @requestQueue, @responseQueue, updateDeviceRequest, (error, response) =>
-      return callback error if error?
+      return callback error, 'updateas' if error?
       callback null, 'updateas', response
 
 module.exports = UpdateAsHandler

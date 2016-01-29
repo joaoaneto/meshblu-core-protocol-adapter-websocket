@@ -96,7 +96,7 @@ class WebsocketHandler
   sendFrame: (type, data) =>
     debug 'sendFrame', type, data
     frame = [type, data]
-    @websocket.send JSON.stringify(frame) unless type?
+    @websocket.send JSON.stringify(frame) if type?
 
   sendError: (message, frame, code) =>
     @sendFrame 'error', message: message, frame: frame, status: code

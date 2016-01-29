@@ -8,6 +8,7 @@ class SendMessageHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, callback
+    @jobManager.do @requestQueue, @responseQueue, request, (error) =>
+      callback error, 'message'
 
 module.exports = SendMessageHandler
