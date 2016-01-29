@@ -23,7 +23,7 @@ class Server
       indexPrefix: 'metric:meshblu-server-websocket'
       type: 'meshblu-server-websocket:request'
       client: redis.createClient(@jobLogRedisUri)
-      @jobLogQueue
+      jobLogQueue: @jobLogQueue
 
     @jobManager = new PooledJobManager
       timeoutSeconds: @jobTimeoutSeconds
