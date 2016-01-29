@@ -30,6 +30,7 @@ class Server
       pool: connectionPool
       jobLogger: jobLogger
 
+    @server.on 'request', @onRequest
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
 
@@ -46,6 +47,16 @@ class Server
     websocket = new WebSocket request, socket, body
     websocketHandler = new WebsocketHandler {websocket, @jobManager, @meshbluConfig}
     websocketHandler.initialize()
+
+  onRequest: (request, response) =>
+    if request.url == '/healthcheck'
+      response.writeHead 200
+      response.write JSON.stringify online: true
+      response.end()
+      return
+
+    response.writeHead 404
+    response.end()
 
   _createConnectionPool: =>
     connectionPool = new Pool
