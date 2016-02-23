@@ -35,7 +35,7 @@ describe 'sendFrame: message', ->
           data:
             uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
         @jobManager.createResponse 'response', response, (@error) =>
-          done @error
+          done()
 
     it 'should not have an error', ->
       expect(@error).to.not.exist
