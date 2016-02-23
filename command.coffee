@@ -13,7 +13,7 @@ class Command
     timeoutSeconds = parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
     meshbluConfig = new MeshbluConfig().toJSON()
 
-    @server = new Server {
+    @serverOptions = {
       port
       namespace
       meshbluConfig
@@ -24,15 +24,21 @@ class Command
       connectionPoolMaxConnections
     }
 
+
   run: =>
-    @server.run (error) =>
+    @panic new Error('Missing required environment variable: REDIS_URI') if _.isEmpty @serverOptions.redisUri
+    @panic new Error('Missing required environment variable: JOB_LOG_REDIS_URI') if _.isEmpty @serverOptions.jobLogRedisUri
+    @panic new Error('Missing required environment variable: JOB_LOG_QUEUE') if _.isEmpty @serverOptions.jobLogQueue
+
+    server = new Server @serverOptions
+    server.run (error) =>
       return @panic error if error?
-      {address,port} = @server.address()
+      {address,port} = server.address()
       console.log "listening on #{address}:#{port}"
 
     process.on 'SIGTERM', =>
       console.log 'SIGTERM received, shutting down'
-      @server.stop =>
+      server.stop =>
         process.exit 0
 
   panic: (error) =>
