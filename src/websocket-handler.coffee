@@ -3,6 +3,7 @@ debug = require('debug')('meshblu-server-websocket:websocket-handler')
 MeshbluWebsocket = require 'meshblu-websocket'
 AuthenticateHandler = require './handlers/authenticate-handler'
 UpdateAsHandler = require './handlers/update-as-handler'
+UpdateHandler = require './handlers/update-handler'
 WhoamiHandler = require './handlers/whoami-handler'
 SendMessageHandler = require './handlers/send-message-handler'
 
@@ -13,6 +14,7 @@ class WebsocketHandler
       identity: @identity
       message: @handlerHandler SendMessageHandler
       subscriptionlist: @subscriptionList
+      update: @handlerHandler UpdateHandler
       updateas: @handlerHandler UpdateAsHandler
       whoami: @handlerHandler WhoamiHandler
 
