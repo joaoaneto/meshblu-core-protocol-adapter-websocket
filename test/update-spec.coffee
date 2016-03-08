@@ -13,11 +13,7 @@ describe 'sendFrame: update', ->
     @connect.shutItDown done
 
   beforeEach ->
-    request =
-      metadata:
-        toUuid: 'to-uuid'
-        fromUuid: 'from-uuid'
-      data: {}
+    request = [{uuid: 'to-uuid'}, { uuid: 'to-uuid', foo: 'bar' }]
 
     @connection.send 'update', request
 
