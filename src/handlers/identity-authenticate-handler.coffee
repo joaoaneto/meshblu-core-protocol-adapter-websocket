@@ -3,7 +3,7 @@ class IdentityAuthenticateHandler
 
   do: (data, callback=->) =>
     {uuid, token} = data
-    return callback null, metadata: {code: 204} unless uuid? && token?
+    return callback null, 'identify', metadata: {code: 204} unless uuid? && token?
 
     request =
       metadata:

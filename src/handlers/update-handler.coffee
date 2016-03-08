@@ -4,21 +4,21 @@ http = require 'http'
 class UpdateHandler
   constructor: ({@jobManager,@auth,@requestQueue,@responseQueue}) ->
 
-  do: (request, callback=->) =>
-    unless _.isPlainObject request.data
-      return callback new Error error: 'invalid update'
+  do: ([query, params], callback) =>
+    unless _.isPlainObject params
+      return callback new Error('invalid update'), 'updated'
 
-    request.data = _.omit request.data, ['uuid', 'token']
+    _.each params, (value, key) =>
+      params[key] = _.omit value, ['uuid', 'token']
 
-    updateDeviceRequest =
+    request =
       metadata:
         jobType: 'UpdateDevice'
-        toUuid: @auth.uuid
-        fromUuid: @auth.uuid
+        toUuid: query.uuid
         auth: @auth
-      data: request.data
+      data: params
 
-    @jobManager.do @requestQueue, @responseQueue, updateDeviceRequest, (error) =>
+    @jobManager.do @requestQueue, @responseQueue, request, (error) =>
       return callback error, 'update' if error?
       callback null, 'updated'
 

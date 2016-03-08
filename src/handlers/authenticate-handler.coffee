@@ -1,9 +1,9 @@
 class AuthenticateHandler
   constructor: ({@jobManager,@auth,@requestQueue,@responseQueue}) ->
 
-  do: (request, callback=->) =>
+  do: (request, callback) =>
     {uuid, token} = request.metadata
-    return callback null, metadata: {code: 204} unless uuid? && token?
+    return callback null, 'authenticate', metadata: {code: 204} unless uuid? && token?
 
     authenticateRequest =
       metadata:
