@@ -11,6 +11,7 @@ class Command
     jobLogQueue  = process.env.JOB_LOG_QUEUE
     connectionPoolMaxConnections = parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
     timeoutSeconds = parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
+    aliasServerUri = process.env.ALIAS_SERVER_URI
     meshbluConfig = new MeshbluConfig().toJSON()
 
     @serverOptions = {
@@ -22,8 +23,8 @@ class Command
       jobLogQueue
       redisUri
       connectionPoolMaxConnections
+      aliasServerUri
     }
-
 
   run: =>
     @panic new Error('Missing required environment variable: REDIS_URI') if _.isEmpty @serverOptions.redisUri

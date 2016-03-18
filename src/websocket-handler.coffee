@@ -1,26 +1,40 @@
-_          = require 'lodash'
-debug = require('debug')('meshblu-server-websocket:websocket-handler')
-MeshbluWebsocket = require 'meshblu-websocket'
-AuthenticateHandler = require './handlers/authenticate-handler'
-UpdateAsHandler = require './handlers/update-as-handler'
-UpdateHandler = require './handlers/update-handler'
-WhoamiHandler = require './handlers/whoami-handler'
-SendMessageHandler = require './handlers/send-message-handler'
+_                                     = require 'lodash'
+async                                 = require 'async'
+debug                                 = require('debug')('meshblu-server-websocket:websocket-handler')
+MeshbluWebsocket                      = require 'meshblu-websocket'
+AuthenticateHandler                   = require './handlers/authenticate-handler'
+UpdateAsHandler                       = require './handlers/update-as-handler'
+UpdateHandler                         = require './handlers/update-handler'
+WhoamiHandler                         = require './handlers/whoami-handler'
+SendMessageHandler                    = require './handlers/send-message-handler'
+GetAuthorizedSubscriptionTypesHandler = require './handlers/get-authorized-subscription-types-handler'
 
 class WebsocketHandler
-  constructor: ({@websocket, @jobManager, @meshbluConfig}) ->
+  constructor: ({@websocket, @jobManager, @meshbluConfig, @messengerFactory}) ->
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
-      identity: @identity
+      identity: @onIdentity
       message: @handlerHandler SendMessageHandler
       subscriptionlist: @subscriptionList
       update: @handlerHandler UpdateHandler
       updateas: @handlerHandler UpdateAsHandler
       whoami: @handlerHandler WhoamiHandler
+      subscribe: @onSubscribe
+      unsubscribe: @onUnsubscribe
 
   initialize: =>
     @websocket.on 'message', @onMessage
     @websocket.on 'close', @onClose
+    @messenger = @messengerFactory.build()
+
+    @messenger.on 'message', (channel, message) =>
+      @sendFrame 'message', message
+
+    @messenger.on 'config', (channel, message) =>
+      @sendFrame 'config', message
+
+    @messenger.on 'data', (channel, message) =>
+      @sendFrame 'data', message
 
   handlerHandler: (handlerClass) =>
     (data) =>
@@ -33,6 +47,7 @@ class WebsocketHandler
 
   # Event Listeners
   onClose: =>
+    @messenger?.close()
     @upstream?.close()
 
   onMessage: (event) =>
@@ -42,8 +57,29 @@ class WebsocketHandler
       return @EVENTS[type] data if @EVENTS[type]?
       @upstream.send type, data if @upstream?
 
+  onSubscribe: (data) =>
+    data.types ?= ['broadcast', 'received', 'sent']
+    requestQueue = 'request'
+    responseQueue = 'response'
+    handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
+    handler.do data, (error, type, response) =>
+      async.each response.types, (type, next) =>
+        @messenger.subscribe {type, uuid: data.uuid}, next
+
+  onUnsubscribe: (data) =>
+    data.types ?= ['broadcast', 'received', 'sent']
+    requestQueue = 'request'
+    responseQueue = 'response'
+    handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
+    handler.do data, (error, type, response) =>
+      async.each response.types, (type, next) =>
+        # slow down or redis crashes
+        _.delay =>
+          @messenger.unsubscribe {type, uuid: data.uuid}, next
+        , 100
+
   # API endpoints
-  identity: (authData) =>
+  onIdentity: (authData) =>
     @auth = _.pick authData, 'uuid', 'token'
     request =
       metadata:
@@ -60,6 +96,9 @@ class WebsocketHandler
       @connectUpstream @auth, (error) =>
         return @sendFrame 'notReady', status: 502, message: 'Bad Gateway' if error?
         @sendFrame 'ready', message: status, status: code
+        async.each ['received', 'config', 'data'], (type, next) =>
+          @messenger.subscribe {type, uuid: @auth.uuid}, next
+
 
   subscriptionList: =>
     request = metadata: {jobType: 'SubscriptionList'}
@@ -77,13 +116,10 @@ class WebsocketHandler
     @upstream.on 'whoami', (data) => @sendFrame 'whoami', data
     @upstream.on 'device', (data) => @sendFrame 'device', data
     @upstream.on 'devices', (data) => @sendFrame 'devices', data
-    @upstream.on 'message', (data) => @sendFrame 'message', data
     @upstream.on 'mydevices', (data) => @sendFrame 'mydevices', data
     @upstream.on 'registered', (data) => @sendFrame 'registered', data
     @upstream.on 'updated', (data) => @sendFrame 'updated', data
     @upstream.on 'unregistered', (data) => @sendFrame 'unregistered', data
-    @upstream.on 'subscribe', (data) => @sendFrame 'subscribe', data
-    @upstream.on 'unsubscribe', (data) => @sendFrame 'unsubscribe', data
     @upstream.on 'error', (error) =>
       delete @upstream
       @sendFrame 'error', message: error.message, code: 502

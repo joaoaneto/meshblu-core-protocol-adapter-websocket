@@ -8,10 +8,12 @@ PooledJobManager = require 'meshblu-core-pooled-job-manager'
 {Pool} = require 'generic-pool'
 redis   = require 'redis'
 RedisNS = require '@octoblu/redis-ns'
+MessengerFactory = require './messenger-factory'
+UuidAliasResolver = require 'meshblu-uuid-alias-resolver'
 
 class Server
   constructor: (options) ->
-    {@disableLogging, @port, @meshbluConfig} = options
+    {@disableLogging, @port, @meshbluConfig, @aliasServerUri} = options
     {@connectionPoolMaxConnections, @redisUri, @namespace, @jobTimeoutSeconds} = options
     {@jobLogRedisUri, @jobLogQueue} = options
 
@@ -30,6 +32,13 @@ class Server
       pool: connectionPool
       jobLogger: jobLogger
 
+    uuidAliasClient = _.bindAll new RedisNS 'uuid-alias', redis.createClient(@redisUri)
+    uuidAliasResolver = new UuidAliasResolver
+      cache: uuidAliasResolver
+      aliasServerUri: @aliasServerUri
+
+    @messengerFactory = new MessengerFactory {uuidAliasResolver, @redisUri, @namespace}
+
     @server.on 'request', @onRequest
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
@@ -45,7 +54,7 @@ class Server
     return unless WebSocket.isWebSocket request
     debug 'onUpgrade'
     websocket = new WebSocket request, socket, body
-    websocketHandler = new WebsocketHandler {websocket, @jobManager, @meshbluConfig}
+    websocketHandler = new WebsocketHandler {websocket, @jobManager, @meshbluConfig, @messengerFactory}
     websocketHandler.initialize()
 
   onRequest: (request, response) =>
