@@ -1,5 +1,5 @@
 _ = require 'lodash'
-redis   = require 'redis'
+redis   = require 'ioredis'
 RedisNS = require '@octoblu/redis-ns'
 MessengerManager = require 'meshblu-core-manager-messenger'
 
