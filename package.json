@@ -27,7 +27,7 @@
     "fakeredis": "^0.3.4",
     "istanbul": "^0.4.0",
     "meshblu-websocket": "^2.3.8",
-    "mocha": "^2.3.3",
+    "mocha": "^2.4.5",
     "mocha-istanbul": "^0.2.0",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0"
@@ -46,6 +46,6 @@
     "meshblu-core-manager-messenger": "^2.0.0",
     "meshblu-core-pooled-job-manager": "^1.0.0",
     "meshblu-uuid-alias-resolver": "^1.0.1",
-    "meshblu-websocket": "^2.3.0"  
+    "meshblu-websocket": "^2.3.0"
   }
 }

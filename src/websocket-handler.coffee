@@ -75,10 +75,8 @@ class WebsocketHandler
     handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
     handler.do data, (error, type, response) =>
       async.each response.types, (type, next) =>
-        # slow down or redis crashes
-        _.delay =>
-          @messenger.unsubscribe {type, uuid: data.uuid}, next
-        , 100
+        @messenger.unsubscribe {type, uuid: data.uuid}, next
+
 
   # API endpoints
   onIdentity: (authData) =>
