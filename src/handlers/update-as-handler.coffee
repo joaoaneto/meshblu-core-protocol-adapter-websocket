@@ -3,14 +3,14 @@ http = require 'http'
 class UpdateAsHandler
   constructor: ({@jobManager,@auth,@requestQueue,@responseQueue}) ->
 
-  do: (request, callback=->) =>
+  do: ({metadata, data}, callback=->) =>
     updateDeviceRequest =
       metadata:
         jobType: 'UpdateDevice'
-        toUuid: request.metadata.toUuid
-        fromUuid: request.metadata.fromUuid
+        toUuid: metadata.toUuid
+        fromUuid: metadata.fromUuid
         auth: @auth
-      data: request.data
+      data: data
 
     @jobManager.do @requestQueue, @responseQueue, updateDeviceRequest, (error, response) =>
       return callback error, 'updateas' if error?
