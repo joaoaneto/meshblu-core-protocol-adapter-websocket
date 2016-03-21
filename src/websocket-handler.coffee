@@ -5,6 +5,11 @@ MeshbluWebsocket                      = require 'meshblu-websocket'
 AuthenticateHandler                   = require './handlers/authenticate-handler'
 UpdateAsHandler                       = require './handlers/update-as-handler'
 UpdateHandler                         = require './handlers/update-handler'
+RegisterHandler                       = require './handlers/register-handler'
+UnregisterHandler                     = require './handlers/unregister-handler'
+GetDeviceHandler                      = require './handlers/get-device-handler'
+MyDevicesHandler                      = require './handlers/my-devices-handler'
+SearchDevicesHandler                  = require './handlers/search-devices-handler'
 WhoamiHandler                         = require './handlers/whoami-handler'
 SendMessageHandler                    = require './handlers/send-message-handler'
 GetAuthorizedSubscriptionTypesHandler = require './handlers/get-authorized-subscription-types-handler'
@@ -13,14 +18,19 @@ class WebsocketHandler
   constructor: ({@websocket, @jobManager, @meshbluConfig, @messengerFactory}) ->
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
+      device: @handlerHandler GetDeviceHandler
+      devices: @handlerHandler SearchDevicesHandler
       identity: @onIdentity
       message: @handlerHandler SendMessageHandler
+      mydevices: @handlerHandler MyDevicesHandler
+      register: @handlerHandler RegisterHandler
+      subscribe: @onSubscribe
       subscriptionlist: @subscriptionList
+      unregister: @handlerHandler UnregisterHandler
+      unsubscribe: @onUnsubscribe
       update: @handlerHandler UpdateHandler
       updateas: @handlerHandler UpdateAsHandler
       whoami: @handlerHandler WhoamiHandler
-      subscribe: @onSubscribe
-      unsubscribe: @onUnsubscribe
 
   initialize: =>
     @websocket.on 'message', @onMessage
@@ -48,14 +58,13 @@ class WebsocketHandler
   # Event Listeners
   onClose: =>
     @messenger?.close()
-    @upstream?.close()
 
   onMessage: (event) =>
     @parseFrame event.data, (error, type, data) =>
       return @sendError error.message, event.data, 500 if error?
       debug 'onMessage', error, type, data
       return @EVENTS[type] data if @EVENTS[type]?
-      @upstream.send type, data if @upstream?
+      @sendError 'Unknown message type', [type], 500
 
   onSubscribe: (data) =>
     data.types ?= ['broadcast', 'received', 'sent']
@@ -95,12 +104,9 @@ class WebsocketHandler
 
       return @sendFrame 'notReady', message: status, status: code unless code == 204
 
-      @connectUpstream @auth, (error) =>
-        return @sendFrame 'notReady', status: 502, message: 'Bad Gateway' if error?
-        @sendFrame 'ready', message: status, status: code
-        async.each ['received', 'config', 'data'], (type, next) =>
-          @messenger.subscribe {type, uuid: @auth.uuid}, next
-
+      @sendFrame 'ready', message: status, status: code
+      async.each ['received', 'config', 'data'], (type, next) =>
+        @messenger.subscribe {type, uuid: @auth.uuid}, next
 
   subscriptionList: =>
     request = metadata: {jobType: 'SubscriptionList'}
@@ -109,24 +115,6 @@ class WebsocketHandler
       {metadata,rawData} = jobResponse
       return @sendFrame 'error', status: metadata.code, message: metadata.status if metadata.code != 200
       @sendFrame 'subscriptionlist', JSON.parse(rawData)
-
-  # Helpers
-  connectUpstream: (authData, callback) =>
-    options = _.extend {}, authData, @meshbluConfig
-
-    @upstream = new MeshbluWebsocket options
-    @upstream.on 'whoami', (data) => @sendFrame 'whoami', data
-    @upstream.on 'device', (data) => @sendFrame 'device', data
-    @upstream.on 'devices', (data) => @sendFrame 'devices', data
-    @upstream.on 'mydevices', (data) => @sendFrame 'mydevices', data
-    @upstream.on 'registered', (data) => @sendFrame 'registered', data
-    @upstream.on 'updated', (data) => @sendFrame 'updated', data
-    @upstream.on 'unregistered', (data) => @sendFrame 'unregistered', data
-    @upstream.on 'error', (error) =>
-      delete @upstream
-      @sendFrame 'error', message: error.message, code: 502
-      @websocket.close()
-    @upstream.connect callback
 
   parseFrame: (frame, callback) =>
     try frame = JSON.parse frame
