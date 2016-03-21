@@ -59,6 +59,8 @@ class WebsocketHandler
 
   onSubscribe: (data) =>
     data.types ?= ['broadcast', 'received', 'sent']
+    data.types.push 'config'
+    data.types.push 'data'
     requestQueue = 'request'
     responseQueue = 'response'
     handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
