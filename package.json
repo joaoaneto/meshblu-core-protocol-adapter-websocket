@@ -1,6 +1,6 @@
 {
   "name": "meshblu-server-websocket",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
   "scripts": {
@@ -43,7 +43,7 @@
     "lodash": "^3.10.1",
     "meshblu-config": "^3.1.1",
     "meshblu-core-job-manager": "^3.1.4",
-    "meshblu-core-manager-messenger": "^2.0.0",
+    "meshblu-core-manager-messenger": "^2.0.1",
     "meshblu-core-pooled-job-manager": "^1.0.0",
     "meshblu-uuid-alias-resolver": "^1.0.1",
     "meshblu-websocket": "^2.3.0"
