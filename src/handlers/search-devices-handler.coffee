@@ -1,3 +1,4 @@
+_ = require 'lodash'
 http = require 'http'
 
 class SearchDevicesHandler
@@ -12,6 +13,9 @@ class SearchDevicesHandler
 
     @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
       return callback error, 'devices' if error?
-      callback null, 'devices', JSON.parse(response.rawData)
+      devices = JSON.parse(response.rawData)
+      _.each devices, (device) =>
+        delete device.token
+      callback null, 'devices', devices
 
 module.exports = SearchDevicesHandler
