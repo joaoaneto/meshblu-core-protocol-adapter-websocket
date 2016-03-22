@@ -86,7 +86,6 @@ class WebsocketHandler
       async.each response.types, (type, next) =>
         @messenger.unsubscribe {type, uuid: data.uuid}, next
 
-
   # API endpoints
   onIdentity: (authData) =>
     @auth = _.pick authData, 'uuid', 'token'
