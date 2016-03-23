@@ -1,14 +1,14 @@
-_                = require 'lodash'
-http             = require 'http'
-WebSocket        = require 'faye-websocket'
-WebsocketHandler = require './websocket-handler'
-JobLogger        = require 'job-logger'
-debug = require('debug')('meshblu-server-websocket:server')
-PooledJobManager = require 'meshblu-core-pooled-job-manager'
-{Pool} = require 'generic-pool'
-redis   = require 'ioredis'
-RedisNS = require '@octoblu/redis-ns'
-MessengerFactory = require './messenger-factory'
+_                 = require 'lodash'
+http              = require 'http'
+WebSocket         = require 'faye-websocket'
+WebsocketHandler  = require './websocket-handler'
+JobLogger         = require 'job-logger'
+debug             = require('debug')('meshblu-server-websocket:server')
+PooledJobManager  = require 'meshblu-core-pooled-job-manager'
+{Pool}            = require 'generic-pool'
+redis             = require 'ioredis'
+RedisNS           = require '@octoblu/redis-ns'
+MessengerFactory  = require './messenger-factory'
 UuidAliasResolver = require 'meshblu-uuid-alias-resolver'
 
 class Server
@@ -86,7 +86,13 @@ class Server
           callback null, client
           callback = null
 
-      destroy: (client) => client.end true
+      destroy: (client) =>
+        if client.quit?
+          client.quit()
+          client.disconnect false
+          return
+        client.end true
+
       validate: (client) => !client.hasError?
 
     return connectionPool
