@@ -25,7 +25,6 @@ class RegisterHandler
 
     @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
       return callback error, 'register' if error?
-      console.log 'response.rawData', response
       callback null, 'registered', JSON.parse(response.rawData)
 
 module.exports = RegisterHandler
