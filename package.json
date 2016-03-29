@@ -1,5 +1,5 @@
 {
-  "name": "meshblu-server-websocket",
+  "name": "meshblu-core-protocol-adapter-websocket",
   "version": "2.0.6",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/octoblu/meshblu-server-websocket.git"
+    "url": "git+https://github.com/octoblu/meshblu-core-protocol-adapter-websocket.git"
   },
   "author": "Octoblu, Inc.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/octoblu/meshblu-server-websocket/issues"
+    "url": "https://github.com/octoblu/meshblu-core-protocol-adapter-websocket/issues"
   },
-  "homepage": "https://github.com/octoblu/meshblu-server-websocket#readme",
+  "homepage": "https://github.com/octoblu/meshblu-core-protocol-adapter-websocket#readme",
   "keywords": [
     "meshblu"
   ],

@@ -3,7 +3,7 @@ http              = require 'http'
 WebSocket         = require 'faye-websocket'
 WebsocketHandler  = require './websocket-handler'
 JobLogger         = require 'job-logger'
-debug             = require('debug')('meshblu-server-websocket:server')
+debug             = require('debug')('meshblu-core-protocol-adapter-websocket:server')
 PooledJobManager  = require 'meshblu-core-pooled-job-manager'
 {Pool}            = require 'generic-pool'
 redis             = require 'ioredis'
@@ -22,8 +22,8 @@ class Server
     connectionPool = @_createConnectionPool()
 
     jobLogger = new JobLogger
-      indexPrefix: 'metric:meshblu-server-websocket'
-      type: 'meshblu-server-websocket:request'
+      indexPrefix: 'metric:meshblu-core-protocol-adapter-websocket'
+      type: 'meshblu-core-protocol-adapter-websocket:request'
       client: redis.createClient(@jobLogRedisUri)
       jobLogQueue: @jobLogQueue
 

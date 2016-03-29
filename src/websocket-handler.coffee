@@ -1,6 +1,6 @@
 _                                     = require 'lodash'
 async                                 = require 'async'
-debug                                 = require('debug')('meshblu-server-websocket:websocket-handler')
+debug                                 = require('debug')('meshblu-core-protocol-adapter-websocket:websocket-handler')
 MeshbluWebsocket                      = require 'meshblu-websocket'
 AuthenticateHandler                   = require './handlers/authenticate-handler'
 UpdateAsHandler                       = require './handlers/update-as-handler'
