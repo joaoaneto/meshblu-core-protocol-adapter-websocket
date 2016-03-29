@@ -74,7 +74,7 @@ class WebsocketHandler
     responseQueue = 'response'
     handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
     handler.do data, (error, type, response) =>
-      async.each response.types, (type, next) =>
+      async.each response?.types, (type, next) =>
         @messenger.subscribe {type, uuid: data.uuid}, next
 
   onUnsubscribe: (data) =>
@@ -83,7 +83,7 @@ class WebsocketHandler
     responseQueue = 'response'
     handler = new GetAuthorizedSubscriptionTypesHandler {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
     handler.do data, (error, type, response) =>
-      async.each response.types, (type, next) =>
+      async.each response?.types, (type, next) =>
         @messenger.unsubscribe {type, uuid: data.uuid}, next
 
   # API endpoints
