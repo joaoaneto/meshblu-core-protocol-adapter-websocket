@@ -8,7 +8,7 @@ class Command
       namespace        : process.env.NAMESPACE ? 'meshblu'
       jobTimeoutSeconds: parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
       jobLogRedisUri   : process.env.JOB_LOG_REDIS_URI
-      jobLogSampleRate : process.env.JOB_LOG_SAMPLE_RATE
+      jobLogSampleRate : parseInt(process.env.JOB_LOG_SAMPLE_RATE)
       jobLogQueue      : process.env.JOB_LOG_QUEUE
       redisUri         : process.env.REDIS_URI
       aliasServerUri   : process.env.ALIAS_SERVER_URI
