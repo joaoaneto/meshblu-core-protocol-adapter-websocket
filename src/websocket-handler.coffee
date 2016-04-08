@@ -15,7 +15,7 @@ SendMessageHandler                    = require './handlers/send-message-handler
 GetAuthorizedSubscriptionTypesHandler = require './handlers/get-authorized-subscription-types-handler'
 
 class WebsocketHandler
-  constructor: ({@websocket, @jobManager, @meshbluConfig, @messengerFactory}) ->
+  constructor: ({@websocket, @jobManager, @messengerFactory}) ->
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
       device: @handlerHandler GetDeviceHandler

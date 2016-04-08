@@ -39,11 +39,10 @@ class Connect
     @sut = new Server
       port: 0xcafe
       jobTimeoutSeconds: 1
-      meshbluConfig:
-        hostname: 'localhost'
-        protocol: 'http'
-        port:   0xbabe
       jobLogRedisUri: 'redis://localhost:6379'
+      jobLogQueue: 'sample-rate:0.00'
+      jobLogSampleRate: 0
+      maxConnections: 10
       redisUri: 'redis://localhost:6379'
       namespace: 'ns'
 
