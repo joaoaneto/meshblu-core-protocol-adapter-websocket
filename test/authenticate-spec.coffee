@@ -46,7 +46,7 @@ describe 'sendFrame: authenticate', ->
           return done error if error?
 
     it 'should yield the response', ->
-      expect(@response).to.deep.equal
+      expect(@response).to.containSubset
         metadata:
           responseId: @responseId
           code: 204

@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-protocol-adapter-websocket",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
   ],
   "devDependencies": {
     "chai": "^3.4.0",
+    "chai-subset": "^1.2.2",
     "coffee-coverage": "^0.7.0",
     "coffee-script": "^1.10.0",
     "fakeredis": "^0.3.4",
@@ -41,7 +42,7 @@
     "lodash": "^3.10.1",
     "meshblu-core-job-manager": "^3.5.1",
     "meshblu-core-manager-messenger": "^2.0.1",
-    "meshblu-core-redis-pooled-job-manager": "^1.5.0",
+    "meshblu-core-redis-pooled-job-manager": "^1.6.0",
     "meshblu-uuid-alias-resolver": "^1.0.1"
   }
 }
