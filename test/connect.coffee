@@ -10,7 +10,7 @@ Server = require '../src/server'
 class Connect
   constructor: ({@redisUri}={}) ->
     @jobManager = new JobManager
-      client: _.bindAll new RedisNS 'ns', redis.createClient(@redisUri)
+      client: _.bindAll new RedisNS 'ns', redis.createClient(@redisUri, dropBufferSupport: true)
       timeoutSeconds: 1
 
   connect: (callback) =>
@@ -25,7 +25,7 @@ class Connect
         connection: @connection
         device: {uuid: 'masseuse', token: 'assassin'}
         jobManager: new JobManager
-          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId)
+          client: _.bindAll new RedisNS 'ns', redis.createClient(@redisId, dropBufferSupport: true)
           timeoutSeconds: 1
 
   shutItDown: (callback) =>
