@@ -1,19 +1,29 @@
-_                     = require 'lodash'
-http                  = require 'http'
-WebSocket             = require 'faye-websocket'
-WebsocketHandler      = require './websocket-handler'
-debug                 = require('debug')('meshblu-core-protocol-adapter-websocket:server')
-RedisPooledJobManager = require 'meshblu-core-redis-pooled-job-manager'
-redis                 = require 'ioredis'
-RedisNS               = require '@octoblu/redis-ns'
-MessengerFactory      = require './messenger-factory'
-UuidAliasResolver     = require 'meshblu-uuid-alias-resolver'
+_                       = require 'lodash'
+http                    = require 'http'
+WebSocket               = require 'faye-websocket'
+WebsocketHandler        = require './websocket-handler'
+debug                   = require('debug')('meshblu-core-protocol-adapter-websocket:server')
+RedisPooledJobManager   = require 'meshblu-core-redis-pooled-job-manager'
+redis                   = require 'ioredis'
+RedisNS                 = require '@octoblu/redis-ns'
+MessengerManagerFactory = require 'meshblu-core-manager-messenger/factory'
+UuidAliasResolver       = require 'meshblu-uuid-alias-resolver'
 
 class Server
   constructor: (options) ->
-    {@disableLogging, @port, @aliasServerUri} = options
-    {@maxConnections, @redisUri, @namespace, @jobTimeoutSeconds} = options
-    {@jobLogRedisUri, @jobLogQueue, @jobLogSampleRate} = options
+    {
+      @disableLogging
+      @port
+      @aliasServerUri
+      @maxConnections
+      @redisUri
+      @firehoseRedisUri
+      @namespace
+      @jobTimeoutSeconds
+      @jobLogRedisUri
+      @jobLogQueue
+      @jobLogSampleRate
+    } = options
 
   run: (callback) =>
     @server = http.createServer()
@@ -35,7 +45,7 @@ class Server
       cache: uuidAliasResolver
       aliasServerUri: @aliasServerUri
 
-    @messengerFactory = new MessengerFactory {uuidAliasResolver, @redisUri, @namespace}
+    @messengerManagerFactory = new MessengerManagerFactory {uuidAliasResolver, @namespace, redisUri: @firehoseRedisUri}
 
     @server.on 'request', @onRequest
     @server.on 'upgrade', @onUpgrade
@@ -52,7 +62,7 @@ class Server
     return unless WebSocket.isWebSocket request
     debug 'onUpgrade'
     websocket = new WebSocket request, socket, body
-    websocketHandler = new WebsocketHandler {websocket, @jobManager, @messengerFactory}
+    websocketHandler = new WebsocketHandler {websocket, @jobManager, @messengerManagerFactory}
     websocketHandler.initialize()
 
   onRequest: (request, response) =>

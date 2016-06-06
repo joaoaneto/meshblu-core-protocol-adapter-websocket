@@ -14,7 +14,7 @@ SendMessageHandler                    = require './handlers/send-message-handler
 GetAuthorizedSubscriptionTypesHandler = require './handlers/get-authorized-subscription-types-handler'
 
 class WebsocketHandler
-  constructor: ({@websocket, @jobManager, @messengerFactory}) ->
+  constructor: ({@websocket, @jobManager, @messengerManagerFactory}) ->
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
       device: @handlerHandler GetDeviceHandler
@@ -34,7 +34,7 @@ class WebsocketHandler
   initialize: =>
     @websocket.on 'message', @onMessage
     @websocket.on 'close', @onClose
-    @messenger = @messengerFactory.build()
+    @messenger = @messengerManagerFactory.build()
 
     @messenger.on 'message', (channel, message) =>
       @sendFrame 'message', message
@@ -44,6 +44,8 @@ class WebsocketHandler
 
     @messenger.on 'data', (channel, message) =>
       @sendFrame 'data', message
+
+    @messenger.connect =>
 
   handlerHandler: (handlerClass) =>
     (data) =>
