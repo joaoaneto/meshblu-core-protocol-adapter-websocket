@@ -14,7 +14,14 @@ SendMessageHandler                    = require './handlers/send-message-handler
 GetAuthorizedSubscriptionTypesHandler = require './handlers/get-authorized-subscription-types-handler'
 
 class WebsocketHandler
-  constructor: ({@websocket, @jobManager, @messengerManagerFactory}) ->
+  constructor: (options={}) ->
+    {
+      @websocket
+      @jobManager
+      @messengerManagerFactory
+      @rateLimitChecker
+    } = options
+
     @EVENTS =
       authenticate: @handlerHandler AuthenticateHandler
       device: @handlerHandler GetDeviceHandler
@@ -52,9 +59,15 @@ class WebsocketHandler
       requestQueue = 'request'
       responseQueue = 'response'
       handler = new handlerClass {@jobManager, @auth, @sendFrame, requestQueue, responseQueue}
-      handler.do data, (error, type, response) =>
-        return @sendError error.message, [type, data], 500 if error?
-        @sendFrame type, response
+
+      uuid = @auth?.as ? @auth?.uuid
+      @rateLimitChecker.isLimited {uuid}, (error, result) =>
+        return callback error if error?
+        return @_sendRateLimit 429 if result
+
+        handler.do data, (error, type, response) =>
+          return @sendError error.message, [type, data], 500 if error?
+          @sendFrame type, response
 
   # Event Listeners
   onClose: =>
@@ -123,6 +136,10 @@ class WebsocketHandler
     debug 'sendFrame', type, data
     frame = [type, data]
     @websocket.send JSON.stringify(frame) if type?
+
+  _sendRateLimit: (code) =>
+    @sendFrame 'ratelimited', {code, message: 'Too Many Requests'}
+    @websocket.close()
 
   sendError: (message, frame, code) =>
     @sendFrame 'error', message: message, frame: frame, status: code

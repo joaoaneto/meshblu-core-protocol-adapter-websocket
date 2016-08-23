@@ -8,6 +8,7 @@ redis                   = require 'ioredis'
 RedisNS                 = require '@octoblu/redis-ns'
 MessengerManagerFactory = require 'meshblu-core-manager-messenger/factory'
 UuidAliasResolver       = require 'meshblu-uuid-alias-resolver'
+RateLimitChecker        = require 'meshblu-core-rate-limit-checker'
 
 class Server
   constructor: (options) ->
@@ -47,6 +48,9 @@ class Server
 
     @messengerManagerFactory = new MessengerManagerFactory {uuidAliasResolver, @namespace, redisUri: @firehoseRedisUri}
 
+    rateLimitCheckerClient = new RedisNS 'meshblu-count', redis.createClient(@redisUri, dropBufferSupport: true)
+    @rateLimitChecker = new RateLimitChecker client: rateLimitCheckerClient
+
     @server.on 'request', @onRequest
     @server.on 'upgrade', @onUpgrade
     @server.listen @port, callback
@@ -62,7 +66,12 @@ class Server
     return unless WebSocket.isWebSocket request
     debug 'onUpgrade'
     websocket = new WebSocket request, socket, body
-    websocketHandler = new WebsocketHandler {websocket, @jobManager, @messengerManagerFactory}
+    websocketHandler = new WebsocketHandler {
+      websocket
+      @jobManager
+      @messengerManagerFactory
+      @rateLimitChecker
+    }
     websocketHandler.initialize()
 
   onRequest: (request, response) =>
