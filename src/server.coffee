@@ -18,6 +18,7 @@ class Server
       @aliasServerUri
       @maxConnections
       @redisUri
+      @cacheRedisUri
       @firehoseRedisUri
       @namespace
       @jobTimeoutSeconds
@@ -25,6 +26,14 @@ class Server
       @jobLogQueue
       @jobLogSampleRate
     } = options
+    throw new Error 'Server constructor is missing "@namespace"' unless @namespace?
+    throw new Error 'Server constructor is missing "@jobTimeoutSeconds"' unless @jobTimeoutSeconds?
+    throw new Error 'Server constructor is missing "@redisUri"' unless @redisUri?
+    throw new Error 'Server constructor is missing "@cacheRedisUri"' unless @cacheRedisUri?
+    throw new Error 'Server constructor is missing "@firehoseRedisUri"' unless @firehoseRedisUri?
+    throw new Error 'Server constructor is missing "@jobLogRedisUri"' unless @jobLogRedisUri?
+    throw new Error 'Server constructor is missing "@jobLogQueue"' unless @jobLogQueue?
+    throw new Error 'Server constructor is missing "@jobLogSampleRate"' unless @jobLogSampleRate?
 
   run: (callback) =>
     @server = http.createServer()
@@ -41,14 +50,16 @@ class Server
       @namespace
     }
 
-    uuidAliasClient = _.bindAll new RedisNS 'uuid-alias', redis.createClient(@redisUri, dropBufferSupport: true)
+    cacheClient = redis.createClient @cacheRedisUri, dropBufferSupport: true
+
+    uuidAliasClient = _.bindAll new RedisNS 'uuid-alias', cacheClient
     uuidAliasResolver = new UuidAliasResolver
       cache: uuidAliasResolver
       aliasServerUri: @aliasServerUri
 
     @messengerManagerFactory = new MessengerManagerFactory {uuidAliasResolver, @namespace, redisUri: @firehoseRedisUri}
 
-    rateLimitCheckerClient = new RedisNS 'meshblu-count', redis.createClient(@redisUri, dropBufferSupport: true)
+    rateLimitCheckerClient = new RedisNS 'meshblu-count', cacheClient
     @rateLimitChecker = new RateLimitChecker client: rateLimitCheckerClient
 
     @server.on 'request', @onRequest

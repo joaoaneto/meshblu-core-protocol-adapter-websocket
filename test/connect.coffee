@@ -44,6 +44,8 @@ class Connect
       jobLogSampleRate: 0
       maxConnections: 10
       redisUri: 'redis://localhost:6379'
+      cacheRedisUri: 'redis://localhost:6379'
+      firehoseRedisUri: 'redis://localhost:6379'
       namespace: 'ns'
 
     @sut.run callback
