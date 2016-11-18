@@ -12,7 +12,7 @@ class UpdateAsHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, updateDeviceRequest, (error, response) =>
+    @jobManager.do updateDeviceRequest, (error, response) =>
       return callback error, 'updateas' if error?
       callback null, 'updateas', response
 

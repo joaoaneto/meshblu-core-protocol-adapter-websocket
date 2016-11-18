@@ -108,7 +108,7 @@ class WebsocketHandler
         auth: @auth
         jobType: 'Authenticate'
 
-    @jobManager.do 'request', 'response', request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return @sendFrame 'error', status: 502, message: "Bad Gateway" if error?
       return @sendFrame 'error', status: 504, message: 'Gateway Timeout' unless response?
       {code,status} = response.metadata
@@ -121,7 +121,7 @@ class WebsocketHandler
 
   subscriptionList: =>
     request = metadata: {jobType: 'SubscriptionList'}
-    @jobManager.do 'request', 'response', request, (error, jobResponse) =>
+    @jobManager.do request, (error, jobResponse) =>
       return @sendFrame 'error', status: 502, message: 'Bad Gateway', frame: ['subscriptionlist'] if error?
       {metadata,rawData} = jobResponse
       return @sendFrame 'error', status: metadata.code, message: metadata.status if metadata.code != 200

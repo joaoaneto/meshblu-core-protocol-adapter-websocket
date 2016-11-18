@@ -3,12 +3,13 @@ http                    = require 'http'
 WebSocket               = require 'faye-websocket'
 WebsocketHandler        = require './websocket-handler'
 debug                   = require('debug')('meshblu-core-protocol-adapter-websocket:server')
-RedisPooledJobManager   = require 'meshblu-core-redis-pooled-job-manager'
-redis                   = require 'ioredis'
+Redis                   = require 'ioredis'
 RedisNS                 = require '@octoblu/redis-ns'
 MessengerManagerFactory = require 'meshblu-core-manager-messenger/factory'
 UuidAliasResolver       = require 'meshblu-uuid-alias-resolver'
 RateLimitChecker        = require 'meshblu-core-rate-limit-checker'
+{ JobManagerRequester } = require 'meshblu-core-job-manager'
+JobLogger               = require 'job-logger'
 
 class Server
   constructor: (options) ->
@@ -25,6 +26,8 @@ class Server
       @jobLogRedisUri
       @jobLogQueue
       @jobLogSampleRate
+      @requestQueueName
+      @responseQueueName
     } = options
     throw new Error 'Server constructor is missing "@namespace"' unless @namespace?
     throw new Error 'Server constructor is missing "@jobTimeoutSeconds"' unless @jobTimeoutSeconds?
@@ -34,25 +37,44 @@ class Server
     throw new Error 'Server constructor is missing "@jobLogRedisUri"' unless @jobLogRedisUri?
     throw new Error 'Server constructor is missing "@jobLogQueue"' unless @jobLogQueue?
     throw new Error 'Server constructor is missing "@jobLogSampleRate"' unless @jobLogSampleRate?
+    throw new Error 'Server constructor is missing "@requestQueueName"' unless @requestQueueName?
+    throw new Error 'Server constructor is missing "@responseQueueName"' unless @responseQueueName?
 
   run: (callback) =>
     @server = http.createServer()
 
-    @jobManager = new RedisPooledJobManager {
-      jobLogIndexPrefix: 'metric:meshblu-core-protocol-adapter-websocket'
-      jobLogType: 'meshblu-core-protocol-adapter-websocket:request'
+    client = new RedisNS @namespace, new Redis @redisUri, dropBufferSupport: true
+    queueClient = new RedisNS @namespace, new Redis @redisUri, dropBufferSupport: true
+
+    jobLogger = new JobLogger
+      client: new Redis @jobLogRedisUri, dropBufferSupport: true
+      indexPrefix: 'metric:meshblu-core-protocol-adapter-websocket'
+      type: 'meshblu-core-protocol-adapter-websocket:request'
+      jobLogQueue: @jobLogQueue
+
+    @jobManager = new JobManagerRequester {
+      client
+      queueClient
       @jobTimeoutSeconds
-      @jobLogQueue
-      @jobLogRedisUri
       @jobLogSampleRate
-      @maxConnections
-      @redisUri
-      @namespace
+      @requestQueueName
+      @responseQueueName
+      queueTimeoutSeconds: @jobTimeoutSeconds
     }
 
-    cacheClient = redis.createClient @cacheRedisUri, dropBufferSupport: true
+    @jobManager._do = @jobManager.do
+    @jobManager.do = (request, callback) =>
+      @jobManager._do request, (error, response) =>
+        jobLogger.log { error, request, response }, (jobLoggerError) =>
+          return callback jobLoggerError if jobLoggerError?
+          callback error, response
 
-    uuidAliasClient = _.bindAll new RedisNS 'uuid-alias', cacheClient
+    queueClient.on 'ready', =>
+      @jobManager.startProcessing()
+
+    cacheClient = new Redis @cacheRedisUri, dropBufferSupport: true
+
+    uuidAliasClient = new RedisNS 'uuid-alias', cacheClient
     uuidAliasResolver = new UuidAliasResolver
       cache: uuidAliasResolver
       aliasServerUri: @aliasServerUri

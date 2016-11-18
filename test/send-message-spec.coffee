@@ -16,7 +16,7 @@ describe 'sendFrame: message', ->
     @connection.send 'message', {}
 
   it 'should create a request', (done) ->
-    @jobManager.getRequest ['request'], (error,request) =>
+    @jobManager.getRequest (error,request) =>
       return done error if error?
       return done new Error('Request timeout') unless request?
       expect(request.metadata.jobType).to.deep.equal 'SendMessage'
@@ -24,7 +24,7 @@ describe 'sendFrame: message', ->
 
   describe 'when the dispatcher responds', ->
     beforeEach (done) ->
-      @jobManager.getRequest ['request'], (error,request) =>
+      @jobManager.do (request, callback) =>
         return done error if error?
         return done new Error('Request timeout') unless request?
 
@@ -34,8 +34,8 @@ describe 'sendFrame: message', ->
             code: 200
           data:
             uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
-        @jobManager.createResponse 'response', response, (@error) =>
-          done()
+        callback null, response
+      , done
 
     it 'should not have an error', ->
       expect(@error).to.not.exist

@@ -9,7 +9,7 @@ class WhoamiHandler
         fromUuid: @auth.uuid
         auth: @auth
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'whoami' if error?
       device = JSON.parse response.rawData if response.rawData?
       callback null, 'whoami', device

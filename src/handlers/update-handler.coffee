@@ -18,7 +18,7 @@ class UpdateHandler
         auth: @auth
       data: params
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error) =>
+    @jobManager.do request, (error) =>
       return callback error, 'update' if error?
       callback null, 'updated'
 

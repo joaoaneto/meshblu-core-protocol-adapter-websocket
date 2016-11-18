@@ -1,20 +1,23 @@
-_       = require 'lodash'
-Server  = require './src/server'
+_      = require 'lodash'
+Server = require './src/server'
+UUID   = require 'uuid'
 
 class Command
   constructor: ->
     @serverOptions =
-      port             : process.env.PORT ? 80
-      namespace        : process.env.NAMESPACE ? 'meshblu'
-      jobTimeoutSeconds: parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
-      jobLogRedisUri   : process.env.JOB_LOG_REDIS_URI
-      jobLogSampleRate : parseFloat(process.env.JOB_LOG_SAMPLE_RATE)
-      jobLogQueue      : process.env.JOB_LOG_QUEUE
-      redisUri         : process.env.REDIS_URI
-      firehoseRedisUri : process.env.FIREHOSE_REDIS_URI
-      cacheRedisUri    : process.env.CACHE_REDIS_URI
-      aliasServerUri   : process.env.ALIAS_SERVER_URI
-      maxConnections   : parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
+      port                 : process.env.PORT ? 80
+      namespace            : process.env.NAMESPACE ? 'meshblu'
+      jobTimeoutSeconds    : parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
+      jobLogRedisUri       : process.env.JOB_LOG_REDIS_URI
+      jobLogSampleRate     : parseFloat(process.env.JOB_LOG_SAMPLE_RATE)
+      jobLogQueue          : process.env.JOB_LOG_QUEUE
+      redisUri             : process.env.REDIS_URI
+      firehoseRedisUri     : process.env.FIREHOSE_REDIS_URI
+      cacheRedisUri        : process.env.CACHE_REDIS_URI
+      aliasServerUri       : process.env.ALIAS_SERVER_URI
+      maxConnections       : parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
+      requestQueueName     : process.env.REQUEST_QUEUE_NAME
+      responseQueueBaseName: process.env.RESPONSE_QUEUE_BASE_NAME
 
   run: =>
     @panic new Error('Missing required environment variable: REDIS_URI') if _.isEmpty @serverOptions.redisUri
@@ -23,6 +26,11 @@ class Command
     @panic new Error('Missing required environment variable: JOB_LOG_REDIS_URI') if _.isEmpty @serverOptions.jobLogRedisUri
     @panic new Error('Missing required environment variable: JOB_LOG_QUEUE') if _.isEmpty @serverOptions.jobLogQueue
     @panic new Error('Missing required environment variable: JOB_LOG_SAMPLE_RATE') unless @serverOptions.jobLogSampleRate?
+    @panic new Error('Missing environment variable: REQUEST_QUEUE_NAME') if _.isEmpty @serverOptions.requestQueueName
+    @panic new Error('Missing environment variable: RESPONSE_QUEUE_BASE_NAME') if _.isEmpty @serverOptions.responseQueueBaseName
+
+    responseQueueId = UUID.v4()
+    @serverOptions.responseQueueName = "#{@serverOptions.responseQueueBaseName}:#{responseQueueId}"
 
     server = new Server @serverOptions
     server.run (error) =>

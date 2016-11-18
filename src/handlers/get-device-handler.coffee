@@ -12,7 +12,7 @@ class GetDeviceHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'device' if error?
       device = JSON.parse(response.rawData)
       delete device.token

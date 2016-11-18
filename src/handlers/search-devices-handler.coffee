@@ -11,7 +11,7 @@ class SearchDevicesHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'devices' if error?
       devices = JSON.parse(response.rawData)
       _.each devices, (device) =>

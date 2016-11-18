@@ -13,7 +13,7 @@ class GetAuthorizedSubscriptionTypesHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'get-authorized-subscription-types' if error?
       callback null, 'get-authorized-subscription-types', JSON.parse(response.rawData)
 

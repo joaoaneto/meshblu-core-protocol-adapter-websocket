@@ -11,7 +11,7 @@ class UnregisterHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'unregister' if error?
       callback null, 'unregistered', JSON.parse(response.rawData)
 

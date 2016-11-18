@@ -22,7 +22,7 @@ describe 'sendFrame: authenticate', ->
     @connection.send 'authenticate', request
 
   it 'should create a request', (done) ->
-    @jobManager.getRequest ['request'], (error,request) =>
+    @jobManager.getRequest (error,request) =>
       return done error if error?
       return done new Error('Request timeout') unless request?
       expect(request.metadata.jobType).to.deep.equal 'Authenticate'
@@ -32,7 +32,7 @@ describe 'sendFrame: authenticate', ->
     beforeEach (done) ->
       @connection.once 'authenticate', (@response) => done()
 
-      @jobManager.getRequest ['request'], (error,request) =>
+      @jobManager.do (request, callback) =>
         return done error if error?
         return done new Error('Request timeout') unless request?
         @responseId = request.metadata.responseId
@@ -42,8 +42,9 @@ describe 'sendFrame: authenticate', ->
             code: 204
           data:
             uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
-        @jobManager.createResponse 'response', response, (error) =>
-          return done error if error?
+        callback null, response
+      , (error) =>
+        done error if error?
 
     it 'should yield the response', ->
       expect(@response).to.containSubset

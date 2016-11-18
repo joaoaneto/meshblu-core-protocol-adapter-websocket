@@ -23,7 +23,7 @@ class RegisterHandler
         auth: @auth
       data: data
 
-    @jobManager.do @requestQueue, @responseQueue, request, (error, response) =>
+    @jobManager.do request, (error, response) =>
       return callback error, 'register' if error?
       callback null, 'registered', JSON.parse(response.rawData)
 

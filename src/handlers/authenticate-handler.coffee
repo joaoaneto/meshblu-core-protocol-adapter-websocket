@@ -12,7 +12,7 @@ class AuthenticateHandler
           uuid: uuid
           token: token
 
-    @jobManager.do @requestQueue, @responseQueue, authenticateRequest, (error, response) =>
+    @jobManager.do authenticateRequest, (error, response) =>
       return callback error, 'authenticate' if error?
       callback null, 'authenticate', response
 

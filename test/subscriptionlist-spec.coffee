@@ -16,7 +16,7 @@ describe 'sendFrame: subscriptionlist', ->
     @connection.send 'subscriptionlist'
 
   it 'should create a request', (done) ->
-    @jobManager.getRequest ['request'], (error,request) =>
+    @jobManager.getRequest (error,request) =>
       return done error if error?
       return done new Error('Request timeout') unless request?
       expect(request.metadata.jobType).to.deep.equal 'SubscriptionList'
@@ -26,7 +26,7 @@ describe 'sendFrame: subscriptionlist', ->
     beforeEach (done) ->
       @connection.once 'subscriptionlist', (@response) => done()
 
-      @jobManager.getRequest ['request'], (error,request) =>
+      @jobManager.do (request, callback) =>
         return done error if error?
         return done new Error('Request timeout') unless request?
 
@@ -36,8 +36,9 @@ describe 'sendFrame: subscriptionlist', ->
             code: 200
           data:
             uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
-        @jobManager.createResponse 'response', response, (error) =>
-          return done error if error?
+        callback null, response
+      , (error) =>
+        done error if error?
 
     it 'should yield the response', ->
       expect(@response).to.deep.equal uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
