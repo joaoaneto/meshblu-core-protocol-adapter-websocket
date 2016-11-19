@@ -92,6 +92,7 @@ class Server
     @server.address()
 
   stop: (callback) =>
+    @jobManager?.stopProcessing()
     @server.close callback
 
   # Event Listeners

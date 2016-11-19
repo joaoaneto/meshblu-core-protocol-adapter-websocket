@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-protocol-adapter-websocket",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Websocket Protocol Adapter for Meshblu",
   "main": "index.js",
   "scripts": {
