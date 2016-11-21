@@ -12,11 +12,12 @@ class Connect
     queueId = UUID.v4()
     @requestQueueName = "test:request:queue:#{queueId}"
     @responseQueueName = "test:response:queue:#{queueId}"
-    client = new RedisNS 'ns', new Redis @redisUri, dropBufferSupport: true
-    queueClient = new RedisNS 'ns', new Redis @redisUri, dropBufferSupport: true
+    @redisUri = 'redis://localhost'
+    @namespace = 'ns'
     @jobManager = new JobManagerResponder {
-      client
-      queueClient
+      @namespace
+      @redisUri
+      maxConnections: 1
       jobTimeoutSeconds: 1
       queueTimeoutSeconds: 1
       jobLogSampleRate: 0
@@ -25,45 +26,54 @@ class Connect
 
   connect: (callback) =>
     async.series [
+      @startJobManager
       @startServer
       @createConnection
       @authenticateConnection
     ], (error) =>
       return callback error if error?
-      client = new RedisNS 'ns', new Redis @redisUri, dropBufferSupport: true
-      queueClient = new RedisNS 'ns', new Redis @redisUri, dropBufferSupport: true
-      callback null,
-        sut: @sut
-        connection: @connection
-        device: {uuid: 'masseuse', token: 'assassin'}
-        jobManager: new JobManagerResponder {
-          client
-          queueClient
-          jobTimeoutSeconds: 1
-          queueTimeoutSeconds: 1
-          jobLogSampleRate: 0
-          @requestQueueName
+      jobManager = new JobManagerResponder {
+        @redisUri
+        @namespace
+        maxConnections: 1
+        jobTimeoutSeconds: 1
+        queueTimeoutSeconds: 1
+        jobLogSampleRate: 0
+        @requestQueueName
+      }
+
+      jobManager.start (error) =>
+        return callback error if error?
+        callback null, {
+          sut: @sut
+          connection: @connection
+          device: {uuid: 'masseuse', token: 'assassin'}
+          jobManager
         }
 
   shutItDown: (callback) =>
     @connection.close()
 
     async.series [
+      async.apply @jobManager.stop
       async.apply @sut.stop
     ], callback
+
+  startJobManager: (callback) =>
+    @jobManager.start callback
 
   startServer: (callback) =>
     @sut = new Server
       port: 0xcafe
       jobTimeoutSeconds: 1
-      jobLogRedisUri: 'redis://localhost:6379'
+      jobLogRedisUri: @redisUri
       jobLogQueue: 'sample-rate:0.00'
       jobLogSampleRate: 0
       maxConnections: 10
-      redisUri: 'redis://localhost:6379'
-      cacheRedisUri: 'redis://localhost:6379'
-      firehoseRedisUri: 'redis://localhost:6379'
-      namespace: 'ns'
+      redisUri: @redisUri
+      cacheRedisUri: @redisUri
+      firehoseRedisUri: @redisUri
+      namespace: @namespace
       requestQueueName: @requestQueueName
       responseQueueName: @responseQueueName
 

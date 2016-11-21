@@ -43,9 +43,6 @@ class Server
   run: (callback) =>
     @server = http.createServer()
 
-    client = new RedisNS @namespace, new Redis @redisUri, dropBufferSupport: true
-    queueClient = new RedisNS @namespace, new Redis @redisUri, dropBufferSupport: true
-
     jobLogger = new JobLogger
       client: new Redis @jobLogRedisUri, dropBufferSupport: true
       indexPrefix: 'metric:meshblu-core-protocol-adapter-websocket'
@@ -53,14 +50,18 @@ class Server
       jobLogQueue: @jobLogQueue
 
     @jobManager = new JobManagerRequester {
-      client
-      queueClient
+      @namespace
+      @redisUri
+      maxConnections: 1
       @jobTimeoutSeconds
       @jobLogSampleRate
       @requestQueueName
       @responseQueueName
       queueTimeoutSeconds: @jobTimeoutSeconds
     }
+
+    @jobManager.once 'error', (error) =>
+      @panic 'fatal job manager error', 1, error
 
     @jobManager._do = @jobManager.do
     @jobManager.do = (request, callback) =>
@@ -69,31 +70,37 @@ class Server
           return callback jobLoggerError if jobLoggerError?
           callback error, response
 
-    queueClient.on 'ready', =>
-      @jobManager.startProcessing()
 
-    cacheClient = new Redis @cacheRedisUri, dropBufferSupport: true
+    @jobManager.start (error) =>
+      return callback error if error?
+      cacheClient = new Redis @cacheRedisUri, dropBufferSupport: true
 
-    uuidAliasClient = new RedisNS 'uuid-alias', cacheClient
-    uuidAliasResolver = new UuidAliasResolver
-      cache: uuidAliasResolver
-      aliasServerUri: @aliasServerUri
+      uuidAliasClient = new RedisNS 'uuid-alias', cacheClient
+      uuidAliasResolver = new UuidAliasResolver
+        cache: uuidAliasResolver
+        aliasServerUri: @aliasServerUri
 
-    @messengerManagerFactory = new MessengerManagerFactory {uuidAliasResolver, @namespace, redisUri: @firehoseRedisUri}
+      @messengerManagerFactory = new MessengerManagerFactory {uuidAliasResolver, @namespace, redisUri: @firehoseRedisUri}
 
-    rateLimitCheckerClient = new RedisNS 'meshblu-count', cacheClient
-    @rateLimitChecker = new RateLimitChecker client: rateLimitCheckerClient
+      rateLimitCheckerClient = new RedisNS 'meshblu-count', cacheClient
+      @rateLimitChecker = new RateLimitChecker client: rateLimitCheckerClient
 
-    @server.on 'request', @onRequest
-    @server.on 'upgrade', @onUpgrade
-    @server.listen @port, callback
+      @server.on 'request', @onRequest
+      @server.on 'upgrade', @onUpgrade
+      @server.listen @port, callback
 
   address: =>
     @server.address()
 
+  panic: (message, exitCode, error) =>
+    error ?= new Error('generic error')
+    console.error message
+    console.error error?.stack
+    process.exit exitCode
+
   stop: (callback) =>
-    @jobManager?.stopProcessing()
-    @server.close callback
+    @jobManager.stop =>
+      @server.close callback
 
   # Event Listeners
   onUpgrade: (request, socket, body) =>
