@@ -62,13 +62,12 @@ class Server
 
     @jobManager.once 'error', (error) =>
       @panic 'fatal job manager error', 1, error
-
-    @jobManager._do = @jobManager.do
-    @jobManager.do = (request, callback) =>
-      @jobManager._do request, (error, response) =>
-        jobLogger.log { error, request, response }, (jobLoggerError) =>
-          return callback jobLoggerError if jobLoggerError?
-          callback error, response
+    # @jobManager._do = @jobManager.do
+    # @jobManager.do = (request, callback) =>
+    #   @jobManager._do request, (error, response) =>
+    #     jobLogger.log { error, request, response }, (jobLoggerError) =>
+    #       return callback jobLoggerError if jobLoggerError?
+    #       callback error, response
 
 
     @jobManager.start (error) =>

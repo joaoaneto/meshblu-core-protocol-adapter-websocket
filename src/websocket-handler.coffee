@@ -109,6 +109,7 @@ class WebsocketHandler
         jobType: 'Authenticate'
 
     @jobManager.do request, (error, response) =>
+      console.error "jobmanager.do", error.stack if error?
       return @sendFrame 'error', status: 502, message: "Bad Gateway" if error?
       return @sendFrame 'error', status: 504, message: 'Gateway Timeout' unless response?
       {code,status} = response.metadata

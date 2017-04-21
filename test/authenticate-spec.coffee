@@ -1,54 +1,32 @@
-_       = require 'lodash'
-Connect = require './connect'
+_                = require 'lodash'
+UUID             = require 'uuid'
+Connect          = require './connect'
+Server           = require '../src/server'
+MeshbluWebsocket = require 'meshblu-websocket'
+{JobManagerResponder} = require 'meshblu-core-job-manager'
 
 describe 'sendFrame: authenticate', ->
-  beforeEach (done) ->
-    @connect = new Connect
-    @connect.connect (error, things) =>
-      return done error if error?
-      {@sut,@connection,@device,@jobManager} = things
-      done()
+  beforeEach 'connect', (done) ->
+    @connect = new Connect()
+    @connect.connect (error, {@sut, @workerFunc, @connection}) => done(error)
 
-  afterEach (done) ->
-    @connect.shutItDown done
-
-  beforeEach ->
-    request =
+  beforeEach 'send authenticate request', (done) ->
+    @workerFunc.yields null, {
       metadata:
-        uuid: 'to-uuid'
-        token: 'to-ken'
-      data: {}
+        code: 204
+    }
 
-    @connection.send 'authenticate', request
+    @connection.connect (error) =>
+      console.log 'connected'
+      done error
 
-  it 'should create a request', (done) ->
-    @jobManager.getRequest (error,request) =>
-      return done error if error?
-      return done new Error('Request timeout') unless request?
-      expect(request.metadata.jobType).to.deep.equal 'Authenticate'
-      done()
-
-  describe 'when the dispatcher responds', ->
-    beforeEach (done) ->
-      @connection.once 'authenticate', (@response) => done()
-
-      @jobManager.do (request, callback) =>
-        return done error if error?
-        return done new Error('Request timeout') unless request?
-        @responseId = request.metadata.responseId
-        response =
-          metadata:
-            responseId: request.metadata.responseId
-            code: 204
-          data:
-            uuid: 'OHM MY!! WATT HAPPENED?? VOLTS'
-        callback null, response
-      , (error) =>
-        done error if error?
-
-    it 'should yield the response', ->
-      expect(@response).to.containSubset
-        metadata:
-          responseId: @responseId
-          code: 204
-        rawData: '{"uuid":"OHM MY!! WATT HAPPENED?? VOLTS"}'
+  afterEach 'shutItDown', (done) ->
+    @connect.shutItDown done
+    
+  it 'should create a request', ->
+    expect(@workerFunc.firstCall.args[0]).to.containSubset
+      metadata:
+        jobType: 'Authenticate'
+        auth:
+          uuid: 'masseuse'
+          token: 'assassin'

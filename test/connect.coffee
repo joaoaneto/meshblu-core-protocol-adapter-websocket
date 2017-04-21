@@ -10,10 +10,12 @@ Server                  = require '../src/server'
 class Connect
   constructor: ({@redisUri}={}) ->
     queueId = UUID.v4()
+    @namespace = 'ns'
     @requestQueueName = "test:request:queue:#{queueId}"
     @responseQueueName = "test:response:queue:#{queueId}"
     @redisUri = 'redis://localhost'
-    @namespace = 'ns'
+    @workerFunc = sinon.stub()
+
     @jobManager = new JobManagerResponder {
       @namespace
       @redisUri
@@ -22,6 +24,7 @@ class Connect
       queueTimeoutSeconds: 1
       jobLogSampleRate: 0
       @requestQueueName
+      @workerFunc
     }
 
   connect: (callback) =>
@@ -29,27 +32,15 @@ class Connect
       @startJobManager
       @startServer
       @createConnection
-      @authenticateConnection
     ], (error) =>
       return callback error if error?
-      jobManager = new JobManagerResponder {
-        @redisUri
-        @namespace
-        maxConnections: 1
-        jobTimeoutSeconds: 1
-        queueTimeoutSeconds: 1
-        jobLogSampleRate: 0
-        @requestQueueName
+      callback null, {
+        sut: @sut
+        connection: @connection
+        device: {uuid: 'masseuse', token: 'assassin'}
+        @jobManager
+        @workerFunc
       }
-
-      jobManager.start (error) =>
-        return callback error if error?
-        callback null, {
-          sut: @sut
-          connection: @connection
-          device: {uuid: 'masseuse', token: 'assassin'}
-          jobManager
-        }
 
   shutItDown: (callback) =>
     @connection.close()
@@ -89,7 +80,6 @@ class Connect
 
     @connection.on 'notReady', (error) => throw error
     @connection.on 'error', (error) => throw error
-    @connection.connect =>
     callback()
 
   authenticateConnection: (callback) =>
