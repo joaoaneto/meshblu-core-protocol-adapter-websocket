@@ -1,13 +1,15 @@
 _                       = require 'lodash'
+{EventEmitter}          = require 'events'
 MeshbluWebsocket        = require 'meshblu-websocket'
 async                   = require 'async'
 UUID                    = require 'uuid'
 Redis                   = require 'ioredis'
 RedisNS                 = require '@octoblu/redis-ns'
 Server                  = require '../src/server'
+
 { JobManagerResponder, JobManagerRequester } = require 'meshblu-core-job-manager'
 
-class Connect
+class Connect extends EventEmitter
   constructor: ({@redisUri}={}) ->
     queueId = UUID.v4()
     @namespace = 'ns'
@@ -24,7 +26,9 @@ class Connect
       queueTimeoutSeconds: 1
       jobLogSampleRate: 0
       @requestQueueName
-      @workerFunc
+      workerFunc: (request, callback) =>
+        @emit 'request', request
+        @workerFunc request, callback
     }
 
   connect: (callback) =>
