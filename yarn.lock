@@ -83,13 +83,7 @@ async@^1.4.0, async@^1.5.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
-async@^2.0.0-rc.5, async@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/async/-/async-2.3.0.tgz#1013d1051047dd320fe24e494d5c66ecaf6147d9"
-  dependencies:
-    lodash "^4.14.0"
-
-async@^2.4.0:
+async@^2.0.0-rc.5, async@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/async/-/async-2.4.0.tgz#4990200f18ea5b837c2cc4f8c031a6985c385611"
   dependencies:
@@ -306,6 +300,10 @@ coffee-script@^1.10.0, coffee-script@^1.11.1, coffee-script@^1.12.5, coffee-scri
   version "1.12.5"
   resolved "https://registry.yarnpkg.com/coffee-script/-/coffee-script-1.12.5.tgz#809f4585419112bbfe46a073ad7543af18c27346"
 
+colors@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/colors/-/colors-1.1.2.tgz#168a4701756b6a7f51a12ce0c97bfa28c084ed63"
+
 combined-stream@^1.0.5, combined-stream@~1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.5.tgz#938370a57b4a51dea2c77c15d5c5fdf895164009"
@@ -363,13 +361,7 @@ debug@2.6.0:
   dependencies:
     ms "0.7.2"
 
-debug@^2.2.0, debug@^2.6.4:
-  version "2.6.4"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.4.tgz#7586a9b3c39741c0282ae33445c4e8ac74734fe0"
-  dependencies:
-    ms "0.7.3"
-
-debug@^2.6.3, debug@^2.6.6:
+debug@^2.2.0, debug@^2.6.3, debug@^2.6.6:
   version "2.6.6"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.6.tgz#a9fa6fbe9ca43cf1e79f73b75c0189cbb7d6db5a"
   dependencies:
@@ -558,6 +550,10 @@ generic-pool@^3.1.7:
 get-caller-file@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-1.0.2.tgz#f702e63127e7e231c160a80c1554acb70d5047e5"
+
+get-port@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/get-port/-/get-port-3.1.0.tgz#ef01b18a84ca6486970ff99e54446141a73ffd3e"
 
 getpass@^0.1.1:
   version "0.1.6"
@@ -1030,17 +1026,18 @@ merge-source-map@^1.0.2:
   dependencies:
     source-map "^0.5.3"
 
-meshblu-core-job-manager@^11.0.2:
-  version "11.0.2"
-  resolved "https://registry.yarnpkg.com/meshblu-core-job-manager/-/meshblu-core-job-manager-11.0.2.tgz#ad8f558e13c41246541c8eec278aee464b3f2da7"
+meshblu-core-job-manager@^11.2.1:
+  version "11.2.1"
+  resolved "https://registry.yarnpkg.com/meshblu-core-job-manager/-/meshblu-core-job-manager-11.2.1.tgz#f264128a4ade4e0494062a859da398ea6d93471f"
   dependencies:
-    async "^2.3.0"
+    async "^2.4.0"
     coffee-script "^1.12.5"
-    debug "^2.6.4"
+    debug "^2.6.6"
     generic-pool "^3.1.7"
     ioredis "^2.5.0"
     lodash "^4.17.2"
     moment "^2.18.1"
+    simple-benchmark "^1.0.11"
     uuid "^3.0.0"
     when "^3.7.8"
   optionalDependencies:
@@ -1497,6 +1494,13 @@ signal-exit@^2.0.0:
 signal-exit@^3.0.0, signal-exit@^3.0.1:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
+
+simple-benchmark@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/simple-benchmark/-/simple-benchmark-1.0.11.tgz#f93f0a5322346d5cade1635a9d2d847446111545"
+  dependencies:
+    coffee-script "^1.10.0"
+    colors "^1.1.2"
 
 sinon-chai@^2.10.0:
   version "2.10.0"

@@ -6,6 +6,7 @@ UUID                    = require 'uuid'
 Redis                   = require 'ioredis'
 RedisNS                 = require '@octoblu/redis-ns'
 Server                  = require '../src/server'
+getPort                 = require 'get-port'
 
 { JobManagerResponder, JobManagerRequester } = require 'meshblu-core-job-manager'
 
@@ -46,38 +47,39 @@ class Connect extends EventEmitter
         @workerFunc
       }
 
-  shutItDown: (callback) =>
+  shutItDown: (callback=_.noop) =>
     @connection.close()
-
-    async.series [
-      async.apply @jobManager.stop
-      async.apply @sut.stop
-    ], callback
+    @jobManager.stop()
+    @sut.stop()
+    callback()
 
   startJobManager: (callback) =>
     @jobManager.start callback
 
   startServer: (callback) =>
-    @sut = new Server
-      port: 0xcafe
-      jobTimeoutSeconds: 1
-      jobLogRedisUri: @redisUri
-      jobLogQueue: 'sample-rate:0.00'
-      jobLogSampleRate: 0
-      maxConnections: 10
-      redisUri: @redisUri
-      cacheRedisUri: @redisUri
-      firehoseRedisUri: @redisUri
-      namespace: @namespace
-      requestQueueName: @requestQueueName
-      responseQueueName: @responseQueueName
+    getPort().then (@port) =>
+      @sut = new Server
+        port: @port
+        jobTimeoutSeconds: 1
+        jobLogRedisUri: @redisUri
+        jobLogQueue: 'sample-rate:0.00'
+        jobLogSampleRate: 0
+        maxConnections: 10
+        redisUri: @redisUri
+        cacheRedisUri: @redisUri
+        firehoseRedisUri: @redisUri
+        namespace: @namespace
+        requestQueueName: @requestQueueName
+        responseQueueName: @responseQueueName
 
-    @sut.run callback
+      @sut.run callback
+    .catch callback
+    return # nothing
 
   createConnection: (callback) =>
     @connection = new MeshbluWebsocket
       hostname: 'localhost'
-      port: 0xcafe
+      port: @port
       uuid: 'masseuse'
       token: 'assassin'
       protocol: 'http'
