@@ -8,16 +8,16 @@ class Command
       port                 : process.env.PORT ? 80
       namespace            : process.env.NAMESPACE ? 'meshblu'
       jobTimeoutSeconds    : parseInt(process.env.JOB_TIMEOUT_SECONDS ? 30)
-      jobLogRedisUri       : process.env.JOB_LOG_REDIS_URI
-      jobLogSampleRate     : parseFloat(process.env.JOB_LOG_SAMPLE_RATE)
-      jobLogQueue          : process.env.JOB_LOG_QUEUE
+      jobLogRedisUri       : process.env.JOB_LOG_REDIS_URI ? process.env.REDIS_URI
+      jobLogSampleRate     : parseFloat(process.env.JOB_LOG_SAMPLE_RATE ? 0)
+      jobLogQueue          : process.env.JOB_LOG_QUEUE ? 'sample-rate:1.00'
       redisUri             : process.env.REDIS_URI
-      firehoseRedisUri     : process.env.FIREHOSE_REDIS_URI
-      cacheRedisUri        : process.env.CACHE_REDIS_URI
-      aliasServerUri       : process.env.ALIAS_SERVER_URI
+      firehoseRedisUri     : process.env.FIREHOSE_REDIS_URI ? process.env.REDIS_URI
+      cacheRedisUri        : process.env.CACHE_REDIS_URI ? process.env.REDIS_URI
+      aliasServerUri       : process.env.ALIAS_SERVER_URI ? ''
       maxConnections       : parseInt(process.env.REDIS_MAX_CONNECTIONS ? 100)
-      requestQueueName     : process.env.REQUEST_QUEUE_NAME
-      responseQueueBaseName: process.env.RESPONSE_QUEUE_BASE_NAME
+      requestQueueName     : process.env.REQUEST_QUEUE_NAME ? 'v2:request:queue'
+      responseQueueBaseName: process.env.RESPONSE_QUEUE_BASE_NAME ? 'v2:response:queue'
 
   run: =>
     @panic new Error('Missing required environment variable: REDIS_URI') if _.isEmpty @serverOptions.redisUri
